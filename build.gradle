@@ -44,6 +44,8 @@ dependencies {
     implementation 'joda-time:joda-time:2.10.13'
     implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
 
+    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
