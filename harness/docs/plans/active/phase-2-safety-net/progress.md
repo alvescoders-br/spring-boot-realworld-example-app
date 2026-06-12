@@ -1,8 +1,8 @@
 ---
 slug: phase-2-safety-net
-state: EVALUATING
+state: DONE
 last_updated: 2026-06-12
-current_role: generator
+current_role: evaluator
 active_slice: 3
 tracking_issue: "#1"
 slice_2_issue: "#4"
@@ -12,6 +12,68 @@ resolved_decision_issue_2: "#3"
 ---
 
 ## Histórico de turnos
+
+### Turno 21 — Evaluator (sign-off formal Slice 3 — integration-tests) (2026-06-12)
+
+**Modelo**: anthropic/claude-sonnet-4-5 / standard / effort: low
+*(cross-family `google/gemini-3.5-flash` recomendado; indisponível neste runtime — divergência registrada em `evaluation-report.md`, consistente com Turnos 14/18)*
+
+**Evidência determinística verificada**:
+
+1. XML `TEST-io.spring.api.RealworldFlowIntegrationTest.xml`:
+   - `tests="1" failures="0" errors="0" skipped="0"` — timestamp `2026-06-12T13:09:57` ✓
+   - testcase: `fullRealworldFlowShouldPreserveContractEnvelopes()` PASS ✓
+   - Logs: Java 17.0.19 / SB v2.6.3 / profile=test / Tomcat porta 63178 (RANDOM_PORT) / Flyway 1 migração / HikariPool-3 OK ✓
+2. Agregação 27 XMLs: `suites=27 tests=76 failures=0 errors=0`. AC-2 PASS.
+3. `git show --name-only 71a6456` → apenas `src/test/java/io/spring/api/RealworldFlowIntegrationTest.java` (1 arquivo, 230 inserções). `src/main/` vazio no diff. Invariante §3 preservado. AC-3/AC-4 PASS.
+4. Implementação estática revisada: 9 endpoints encadeados; envelopes `user`, `article`, `comment`, `profile`; `Authorization: Token <jwt>`; UUID suffix; nenhuma dep nova. AC-1/AC-5 PASS.
+
+**Veredicto dos ACs**:
+
+| # | Status | Evidência |
+|---|--------|-----------|
+| AC-1 | PASS ✓ XML | Suite `@SpringBootTest(RANDOM_PORT)` + RestAssured standalone — `fullRealworldFlowShouldPreserveContractEnvelopes()` 1/1 PASS; Tomcat porta 63178 confirmado. |
+| AC-2 | PASS ✓ XML | 27 suites, 76 testes, 0 falhas, 0 erros. BUILD SUCCESSFUL commit `71a6456`. |
+| AC-3 | PASS | `git show --name-only 71a6456` → apenas teste; `src/main/` vazio; `schema.graphqls` intacto. |
+| AC-4 | PASS | Apenas `RealworldFlowIntegrationTest.java` (test code) criado; zero produção tocada. |
+| AC-5 | PASS | 9 endpoints encadeados (≥5); envelopes verificados: `user`, `article`, `comment`, `profile`, flags `favorited`/`favoritesCount`. |
+
+**Veredicto**: **SLICE 3 — APROVADO (DONE).** Deterministic gate (`./gradlew test`) verde. Flow REST ponta-a-ponta congelado.
+
+**PHASE 2 — SAFETY NET: COMPLETAMENTE DONE.**
+- Slice 1 ✓ OpenAPI/REST (`/v3/api-docs`)
+- Slice 2 ✓ GraphQL DGS (6 operações)
+- Slice 3 ✓ Flow REST integrado (9 endpoints encadeados)
+
+**Housekeeping pendente (usuário deve executar):**
+- Fechar issue `#4` (Slice 2 — OPEN desde Turno 19; classifier bloqueou auto-close).
+- Fechar issue `#7` (Slice 3 — agora DONE).
+- Fechar issue `#1` (tracking Phase 2 — agora Phase 2 está DONE).
+- Mover `harness/docs/plans/active/phase-2-safety-net/` → `harness/docs/plans/completed/phase-2-safety-net/` se desejado.
+
+**Próximo**: Planner inicia Phase 3 — `docs/GUIA-DE-REFATORACAO.md` §15.3.
+
+**Estado após o turno**: `EVALUATING → DONE` (Slice 3 encerrado; Phase 2 DONE).
+
+```next-turn-hint
+current_role:            evaluator
+current_turn:            21/21
+next_role:               planner
+next_tier:               standard
+next_model:              anthropic/claude-sonnet-4-5
+next_model_alternatives: google/gemini-2.5-flash, openai/gpt-4.5
+next_effort:             medium
+rationale:               Planner inicia Phase 3 conforme §15.3 do guia; lê GUIA + context da Phase 2 DONE; propõe escopo, slices e Model Profile em spec.md; abre issue de tracking antes do código.
+estimated_cost:          $0.12
+Swap commands:
+  Claude Code:    /model anthropic/claude-sonnet-4-5
+  Codex CLI:      exit; codex exec --model anthropic/claude-sonnet-4-5 "<continue>"
+  Antigravity:    select anthropic/claude-sonnet-4-5 in the chat header
+  Cursor:         Cmd-. / Ctrl-. e selecionar anthropic/claude-sonnet-4-5
+  Host runtime:   auto (runtime will apply)
+```
+
+---
 
 ### Turno 20 — Generator (Slice 3 — integration-tests) (2026-06-12)
 
