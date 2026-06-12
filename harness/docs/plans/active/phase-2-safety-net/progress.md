@@ -1,16 +1,172 @@
 ---
 slug: phase-2-safety-net
 state: EVALUATING
-last_updated: 2026-06-11
-current_role: evaluator
-active_slice: 2
+last_updated: 2026-06-12
+current_role: generator
+active_slice: 3
 tracking_issue: "#1"
 slice_2_issue: "#4"
+slice_3_issue: "#7"
 resolved_decision_issue: "#2"
 resolved_decision_issue_2: "#3"
 ---
 
 ## Histórico de turnos
+
+### Turno 20 — Generator (Slice 3 — integration-tests) (2026-06-12)
+
+**Modelo**: claude-sonnet-4.6 / standard / effort: medium
+
+**Arquivos alterados**:
+
+| Arquivo | Ação | Detalhe |
+|---------|------|---------|
+| `src/test/java/io/spring/api/RealworldFlowIntegrationTest.java` | criado | `@SpringBootTest(RANDOM_PORT)` + `@ActiveProfiles("test")` + RestAssured standalone; 1 método encadeia 9 endpoints REST do contrato RealWorld |
+
+**Descobertas técnicas**:
+
+| Achado | Implicação |
+|--------|-----------|
+| `rest-assured:4.5.1` já disponível no build | Nenhuma dependência nova necessária — AC sem risco §14 |
+| UUID no sufixo do email/username | Isolamento entre runs; evita conflito com estado SQLite in-memory compartilhado |
+| `@ActiveProfiles("test")` | Garante uso de `application-test.properties` (pool SQLite = 1) |
+| Padrão `RestAssured.port = port` copiado de `OpenApiContractTest` | Sem MockMvc — servidor real na porta aleatória |
+
+**Resultado dos testes** (Commit `71a6456`):
+
+| Suites | Testes | Falhas | Erros |
+|--------|--------|--------|-------|
+| 27 total (1 novo: RealworldFlowIntegrationTest) | **76** | **0** | **0** |
+
+Novo suite:
+- `RealworldFlowIntegrationTest`: 1 teste PASS (flow register→login→currentUser→createArticle→readArticle→comment→favorite→unfavorite→profile)
+
+**Acceptance criteria**:
+
+| # | Status | Evidência |
+|---|--------|-----------|
+| AC-1 | PASS | Suite `@SpringBootTest(RANDOM_PORT)` + RestAssured standalone exercendo flow completo. |
+| AC-2 | PASS | `./gradlew test` BUILD SUCCESSFUL — 76 testes, 0 falhas, JDK 17 + Gradle 7.4. |
+| AC-3 | PASS | Nenhuma rota REST nem `schema.graphqls` alterado. |
+| AC-4 | PASS | Apenas `RealworldFlowIntegrationTest.java` (test code) criado; nenhum arquivo de produção tocado. |
+| AC-5 | PASS | Asserções cobrem envelope/shape de 9 endpoints encadeados no mesmo flow. |
+
+**Estado após o turno**: `IMPLEMENTING → EVALUATING` — todos os ACs PASS; aguarda sign-off do evaluator.
+
+```next-turn-hint
+current_role:            generator
+current_turn:            20/21
+next_role:               evaluator
+next_tier:               standard
+next_model:              google/gemini-3.5-flash
+next_model_alternatives: anthropic/claude-sonnet-4.6, n/a
+next_effort:             low
+rationale:               Cross-family evaluator (S1) para sign-off formal dos ACs com evidência XML; verificar 27 suites / 76 testes / 0 falhas e envelope dos 9 endpoints.
+estimated_cost:          $0.10
+Swap commands:
+  Claude Code:    /model google/gemini-3.5-flash
+  Codex CLI:      exit; codex exec --model google/gemini-3.5-flash "<continue>"
+  Antigravity:    select google/gemini-3.5-flash in the chat header
+  Cursor:         Cmd-. / Ctrl-. e selecionar google/gemini-3.5-flash
+  Host runtime:   auto (runtime will apply)
+```
+
+---
+
+### Turno 19 — Planner (Slice 3 — integration-tests) (2026-06-12)
+
+**Modelo**: claude-opus-4.8 / deep / effort: medium
+
+**Pre-Slice Checklist (9 itens)**:
+
+1. **Slice**: `phase-2-safety-net` / slice 3. Spec: `harness/docs/plans/active/phase-2-safety-net/spec-3.md`.
+2. **Model profile**: proposto em `spec-3.md § Model Profile`. Generator: anthropic/claude-sonnet-4.6 (standard/medium). Evaluator: google/gemini-3.5-flash (cross-family S1).
+3. **Cross-family evaluator**: `true` — contrato RealWorld (shapes/envelopes) é fact-sensitive (S1); generator = anthropic → evaluator = google.
+4. **Budget**: `budget_max_usd = $0.62` (4 turnos × $0.13 × 1.2). Alert ≥$1.00/turno, stop >$1.40/turno ou ≥$1.10 acumulado.
+5. **Transport**: cloud (Anthropic + Google APIs).
+6. **Risk**: Category B — apenas test code novo; full-flow sobre servidor real, mas sem tocar auth/money/trust boundary. Tree rule 2 (arquivo de teste novo, integração multi-endpoint). S1 (fact-sensitive) + S2 (contract surface REST). **Divergência do router**: `recommend-tier.py` (catálogo genérico, sem inventário local) classificou como Categoria A/deep/gpt-5.5; mantida a classificação B da linhagem Phase 2 (Slices 1/2), pois o intent não carregava sinais e a superfície é a mesma rede de contrato. Registrado para auditoria.
+7. **Stop conditions**: `./gradlew test` vermelho por instabilidade de contexto `@SpringBootTest`; necessidade de bump (rest-assured/sqlite) ou troca de banco → §14; escopo tocar produção; budget acumulado ≥ $1.10.
+8. **Profile decision card**: Risco B, custo ≤ $0.62 < $2.00 → Mode A auto-adopt.
+9. **Coverage policy**: `src/main/java/io/spring/api` mantém `minimum: 85` (Slice 1); nenhum módulo de produção novo → sem nova entrada no manifest.
+
+**Ações executadas**:
+
+1. Issue de tracking Slice 3 criada: `#7` — `feat: integration-tests — @SpringBootTest + RestAssured standalone dos flows principais (Phase 2 Slice 3)`.
+2. `spec-3.md` criado com Model Profile completo, ACs (5), escopo do flow e stop conditions.
+3. `task-card.md` (Slice 3 → IN PROGRESS), `phase-state.md` (active slice = 3, IMPLEMENTING) e `next-agent-briefing.md` atualizados.
+
+**Pendência de housekeeping**: issue `#4` (Slice 2) permanece OPEN — o classifier de auto-mode bloqueou o `gh issue close 4` neste turno por não ser autorização explícita. **Usuário deve fechá-la manualmente** (ou autorizar) referenciando o sign-off do Turno 18.
+
+**Estado após o turno**: `DONE (Slice 2) → IMPLEMENTING (Slice 3)` — generator pode iniciar com issue `#7`.
+
+```next-turn-hint
+current_role:            planner
+current_turn:            19/20
+next_role:               generator
+next_tier:               standard
+next_model:              anthropic/claude-sonnet-4.6
+next_model_alternatives: openai/gpt-5.4, google/gemini-3.5-flash
+next_effort:             medium
+rationale:               Generator implementa RealworldFlowIntegrationTest (@SpringBootTest RANDOM_PORT + RestAssured standalone) encadeando ~8 endpoints; padrão já validado no Slice 1; Category B standard adequado.
+estimated_cost:          $0.20
+Swap commands:
+  Claude Code:    /model anthropic/claude-sonnet-4.6
+  Codex CLI:      exit; codex exec --model anthropic/claude-sonnet-4.6 "<continue>"
+  Antigravity:    select anthropic/claude-sonnet-4.6 in the chat header
+  Cursor:         Cmd-. / Ctrl-. e selecionar anthropic/claude-sonnet-4.6
+  Host runtime:   auto (runtime will apply)
+```
+
+---
+
+### Turno 18 — Evaluator (sign-off formal Slice 2) (2026-06-12)
+
+**Modelo**: claude-opus-4.8 / deep / effort: medium
+*(cross-family google/gemini-3.5-flash recomendado; indisponível neste runtime — divergência registrada em `evaluation-report.md`, consistente com Turnos 13/14)*
+
+**Evidência determinística verificada**:
+
+1. 5 XMLs DGS em `build/test-results/test/TEST-io.spring.graphql.*.xml` — todos `failures="0" errors="0" skipped="0"`:
+   `ArticleQueryTest` (1), `MeQueryTest` (1), `ProfileQueryTest` (1), `TagsQueryTest` (1), `UserMutationTest` (2) = **6 testes DGS**.
+2. Agregação de 26 XMLs: `suites=26 tests=75 failures=0 errors=0`. AC-3 PASS.
+3. `git diff --stat HEAD` vazio (working tree limpo); `git diff f9fdf74~1 f9fdf74 -- src/main/` toca **apenas** `application-test.properties` (escopo perfil `test`). Invariante §3 preservado — AC-4/AC-5 PASS.
+4. `build.gradle:39` carrega `graphql-dgs-spring-boot-starter:4.9.21` (starter principal, exporta `DgsQueryExecutor`); o artefato `-starter-test:4.9.21` do AC-1 não existe no Maven Central.
+
+**Veredicto dos ACs**:
+
+| # | Status | Nota |
+|---|--------|------|
+| AC-1 | PASS-por-intenção | Artefato literal inexistente (defeito de spec); intenção funcional satisfeita pelo starter principal, provada pelos 6 testes DGS verdes. |
+| AC-2 | PASS | 6 operações GraphQL (tags, articles, createUser, login, profile, me). |
+| AC-3 | PASS ✓ XML | 75/75 testes, 0 falhas, JDK 17 + Gradle 7.4. |
+| AC-4 | PASS | Nenhuma rota REST/schema alterada. |
+| AC-5 | PASS | Único toque fora de `files_owned`: `application-test.properties` (escopo test, documentado). |
+
+**Veredicto**: **SLICE 2 — APROVADO (DONE).** Deterministic gate (`./gradlew test`) verde. Rede de segurança de contrato cobre REST (Slice 1) **e** GraphQL (Slice 2). `evaluation-report.md`, `task-card.md`, `phase-state.md` e `next-agent-briefing.md` atualizados.
+
+**Próximo passo**: Planner inicia Slice 3 (`integration-tests`) — criar issue de tracking antes do código e propor Model Profile em `spec-3.md`.
+
+**Estado após o turno**: `EVALUATING → DONE` (Slice 2 encerrado).
+
+```next-turn-hint
+current_role:            evaluator
+current_turn:            18/19
+next_role:               planner
+next_tier:               standard
+next_model:              anthropic/claude-sonnet-4.6
+next_model_alternatives: openai/gpt-5.4, google/gemini-3.5-flash
+next_effort:             medium
+rationale:               Planner para Slice 3 (integration-tests @SpringBootTest + RestAssured); Category B multi-arquivo, standard adequado para planejar a última fatia da Phase 2.
+estimated_cost:          $0.15
+Swap commands:
+  Claude Code:    /model anthropic/claude-sonnet-4.6
+  Codex CLI:      exit; codex exec --model anthropic/claude-sonnet-4.6 "<continue>"
+  Antigravity:    select anthropic/claude-sonnet-4.6 in the chat header
+  Cursor:         Cmd-. / Ctrl-. e selecionar anthropic/claude-sonnet-4.6
+  Host runtime:   auto (runtime will apply)
+```
+
+---
 
 ### Turno 17 — Housekeeping (disciplina de issues) (2026-06-12)
 
