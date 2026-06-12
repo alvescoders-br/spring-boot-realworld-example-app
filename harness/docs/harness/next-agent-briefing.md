@@ -22,6 +22,8 @@ Tracking issue: `#1` — `feat: planejar safety net de contrato da Phase 2`.
 Slice 2 issue: `#4` — `feat: contract-tests — REST @WebMvcTest estendidos + testes DGS GraphQL`.
 Resolved decision issue: `#2` — JDK 17 exists at `C:\JAVA\jdk17.0.19_10`.
 Resolved decision issue: `#3` — wrapper reverted to `gradle-7.4-bin.zip` (guide §1 baseline). Commit `fa60c47`.
+Retroactive issue: `#5` — Phase 1 Fundação bootstrap (commit `0b441cf`). Closed 2026-06-12.
+Retroactive issue: `#6` — Phase 2 Slice 1 springdoc (commits `4cc546a`+`980059d`). Closed 2026-06-12.
 
 Turno 14 result (Slice 1 evaluator sign-off):
 - 21 suites total: **69 tests, 0 failures, 0 errors, 0 skipped**.

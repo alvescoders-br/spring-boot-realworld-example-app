@@ -12,6 +12,26 @@ resolved_decision_issue_2: "#3"
 
 ## Histórico de turnos
 
+### Turno 17 — Housekeeping (disciplina de issues) (2026-06-12)
+
+**Modelo**: claude-sonnet-4.6 / standard / effort: low
+
+**Ações executadas**:
+
+| Ação | Detalhe |
+|------|---------|
+| Issue `#5` criada e fechada | Retroativa para commit `0b441cf` (Phase 1 Fundação bootstrap) |
+| Issue `#6` criada e fechada | Retroativa para commits `4cc546a`+`980059d` (Phase 2 Slice 1 springdoc) |
+| `phase-state.md` atualizado | Evidências de Phase 1 e Slice 1 referenciam `#5` e `#6` |
+
+**Causa raiz das violações**: GitHub Issues estava desabilitado no repositório original.
+Os 3 commits (`0b441cf`, `4cc546a`, `980059d`) foram feitos antes do Turno 8 habilitá-lo.
+Os commits posteriores (`fa60c47 #3`, `f9fdf74 #4`, `484ae23 #4`) já seguiam a disciplina.
+
+**Estado após o turno**: working tree limpo; todas as violações de disciplina sanadas.
+
+---
+
 ### Turno 16 — Generator (Slice 2 — DGS test infra) (2026-06-11)
 
 **Modelo**: claude-sonnet-4.6 / standard / effort: medium

@@ -13,7 +13,7 @@ Next recommended phase: 2 — Safety Net (retomar após decisão #3 e reconcilia
 
 | Phase | Completed at | Evidence |
 |---|---|---|
-| 1 — Fundação | 2026-06-10 | commit `0b441cf`; templates em `.github/ISSUE_TEMPLATE/`; DoR/DoD e CC em `docs/` |
+| 1 — Fundação | 2026-06-10 | commit `0b441cf` #5; templates em `.github/ISSUE_TEMPLATE/`; DoR/DoD e CC em `docs/` |
 
 ## Active phase
 
@@ -28,7 +28,7 @@ Resolved decision issue: `#3` — wrapper revertido para `gradle-7.4-bin.zip`. C
 
 | Slice | Completed at | Evidence |
 |-------|-------------|---------|
-| 1 — springdoc-openapi | 2026-06-11 (Turno 14 sign-off) | `evaluation-report.md` state=DONE; XML: 69/69 testes, `OpenApiContractTest` PASS |
+| 1 — springdoc-openapi | 2026-06-11 (Turno 14 sign-off) | `evaluation-report.md` state=DONE; XML: 69/69 testes, `OpenApiContractTest` PASS; commits `4cc546a`+`980059d` #6 |
 
 ## Active slice (Phase 2)
 
@@ -43,6 +43,7 @@ Resolved decision issue: `#3` — wrapper revertido para `gradle-7.4-bin.zip`. C
 - **AC-1 gap**: `graphql-dgs-spring-boot-starter-test:4.9.21` não existe no Maven Central; `DgsQueryExecutor` vem do starter principal.
 - **Decisão #3 resolvida (Opção A)**: wrapper em `gradle-7.4-bin.zip`. Commit `fa60c47`.
 - **JDK 17** disponível em `C:\JAVA\jdk17.0.19_10`; aplicar `JAVA_HOME`/`PATH` temporários por comando.
+- **Issues retroativas (Turno 17)**: `#5` (Phase 1 bootstrap, commit `0b441cf`) e `#6` (Phase 2 Slice 1, commits `4cc546a`+`980059d`) criadas e fechadas em 2026-06-12 para sanar violações de disciplina — GitHub Issues estava desabilitado quando esses commits foram feitos.
 - **Harness-internal** `phase-17-router-delegation` plan não relacionado ao produto Spring Boot;
   completo pendente sign-off Category-C humano.
 - **Git identity**: committer name/email foram inferidos automaticamente. Configurar com
