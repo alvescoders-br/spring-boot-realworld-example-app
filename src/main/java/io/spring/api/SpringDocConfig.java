@@ -10,7 +10,6 @@ public class SpringDocConfig {
   @Bean
   public WebSecurityCustomizer springDocSecurityCustomizer() {
     return web ->
-        web.ignoring()
-            .antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html");
+        web.ignoring().requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html");
   }
 }

@@ -1,6 +1,6 @@
 # Next Agent Briefing
 
-State: DONE (Phase 2) — Aguardando Planner Phase 3
+State: DONE (Phase 3 / Slice 2) — Turno 38 human sign-off; commit + close #11; issues #13/#14 abertas
 
 ## Resume order
 
@@ -9,66 +9,50 @@ State: DONE (Phase 2) — Aguardando Planner Phase 3
 3. Ler `harness/docs/harness/START_HERE.md`.
 4. Ler `docs/GUIA-DE-REFATORACAO.md` — **the project source of truth** (precedence over generic best practices; §0).
 5. Ler `harness/docs/harness/source-map.md` e `harness/docs/harness/phase-state.md`.
-6. Ler o roadmap §15.3 do guia para identificar o escopo da Phase 3.
-7. Executar Pre-Slice Checklist completo (9 itens) antes de qualquer código.
-8. Abrir issue de tracking GitHub (template `feature_request.md`) antes de iniciar.
+6. Ler o plano concluído (referência): `harness/docs/plans/active/phase-3-plataforma/spec.md`, `task-card.md`, `progress.md`, `evaluation-report.md`.
 
-## Current situation
+## Current situation — Phase 3 DONE
 
-**Phase 2 — Safety Net: COMPLETAMENTE DONE** (Turno 21, evaluator sign-off 2026-06-12).
+**Phase 2 — Safety Net: DONE** (Turno 21, evaluator sign-off 2026-06-12).
+**Phase 3 — Plataforma: DONE** (Turno 38, human sign-off 2026-06-15).
 
-Todos os 3 slices concluídos com evidência XML real (JDK 17 + Gradle 7.4 + SB 2.6.3):
+### Phase 3 slices — resumo
 
 | Slice | Status | Evidência |
-|-------|--------|-----------|
-| 1 — springdoc-openapi | DONE (Turno 14) | 69/69 testes; `/v3/api-docs` expõe contrato REST |
-| 2 — contract-tests | DONE (Turno 18) | 75/75 testes; 6 operações GraphQL DGS congeladas |
-| 3 — integration-tests | DONE (Turno 21) | 76/76 testes; 9 endpoints REST encadeados (flow completo) |
+|-------|--------|-----------| 
+| 1 — Gradle 9 (revertido/re-seq ADR-0003) | DONE (Turno 30) | Gradle 7.4 restaurado; XML 27/76/0; ADR-0003 accepted |
+| 2 — Spring Boot 4 + Java 25 + Gradle 9 | DONE (Turno 38) | 8 gates; 27/76/0; Evaluator + Reviewer + Security Reviewer PASS; commit #11; #11 fechada |
 
-**Issues de housekeeping pendentes (usuário deve fechar manualmente):**
-- `#4` — Slice 2 (OPEN desde Turno 19; classifier bloqueou auto-close).
-- `#7` — Slice 3 (DONE desde Turno 21).
-- `#1` — tracking Phase 2 (Phase 2 DONE).
+### Evidência Slice 2 — resumo de papéis
 
-## Arquivos relevantes (Phase 2 — referência)
+| Papel | Turno | Decisão |
+|-------|-------|---------|
+| Generator | 34 | Implementação completa (SB4/Java25/Gradle9/Jakarta/SecurityFilterChain) |
+| Evaluator (cross-family, Google) | 35 | PASS — 8 gates; 27/76/0 |
+| Reviewer (Anthropic) | 36 | PASS — migração multi-arquivo; matriz autorização preservada |
+| Security Reviewer (cross-family, Google) | 37 | PASS — 5 itens auditados; sem regressões |
+| Human sign-off | 38 | APROVADO — `Aprovado. Conclua` |
 
-- `harness/docs/plans/active/phase-2-safety-net/evaluation-report.md` — sign-offs Slices 1, 2 e 3
-- `harness/docs/plans/active/phase-2-safety-net/progress.md` — histórico completo (Turnos 1–21)
-- `harness/docs/plans/active/phase-2-safety-net/task-card.md` — status DONE
-- `src/test/java/io/spring/api/OpenApiContractTest.java` — Slice 1
-- `src/test/java/io/spring/graphql/` — Slice 2 (5 suites DGS)
-- `src/test/java/io/spring/api/RealworldFlowIntegrationTest.java` — Slice 3
+## Issues open
 
-## Resolved issues (Phase 2)
+| # | Título | Tipo |
+|---|--------|------|
+| #4 | Phase 2 Slice 2 tracking | OPEN (housekeeping pendente — sign-off foi Turno 18) |
+| #7 | Phase 2 Slice 3 tracking | OPEN (housekeeping pendente — sign-off foi Turno 21) |
+| #1 | Phase 2 tracking | OPEN (housekeeping pendente — Phase 2 DONE) |
+| #13 | Rate limiting em `/users/login` | OPEN (future-work, security) |
+| #14 | `/graphiql` hardening para ambientes não-demo | OPEN (future-work, enhancement) |
 
-- `#2` — JDK 17 localizado em `C:\JAVA\jdk17.0.19_10`.
-- `#3` — wrapper revertido para `gradle-7.4-bin.zip`. Commit `fa60c47`.
-- `#5` — Phase 1 Fundação bootstrap (commit `0b441cf`). Closed 2026-06-12.
-- `#6` — Phase 2 Slice 1 springdoc (commits `4cc546a`+`980059d`). Closed 2026-06-12.
+## Next action — aguardando instrução humana
 
-## Binding constraints (from the guide)
-
-- **Architecture & contract are immutable** without permission (§0.2, §3): DDD layers `api/core/application/infrastructure`, CQRS, REST+GraphQL coexistence, RealWorld API contract, base `http://localhost:8080` **without** `/api` prefix.
-- **Permission protocol §14**: STOP and open/use `needs-decision` issue for SQLite Hibernate dialect vs. DB swap, CQRS read-model strategy in JPA, Joda→`java.time` vs `AttributeConverter`, dependency bumps for SB4/Gradle9, reading-time cache mechanism, `record` conversions that change the contract, and anything not listed in §4/§5.
-- **Safety net complete** (§11, §15.2): Phase 2 DONE — REST + GraphQL + flow integration tests frozen. Phase 3 may now begin.
-- **Issue before code** (§6): every commit references `#<id>` — Conventional Commits (§7).
-- **JDK 17 + Gradle 7.4**: executar `./gradlew test` com `JAVA_HOME=C:\JAVA\jdk17.0.19_10`.
-
-## Next action — Planner (Phase 3)
-
-1. Ler `docs/GUIA-DE-REFATORACAO.md` §15.3 para identificar escopo da Phase 3.
-2. Executar `harness/scripts/recommend-tier.py --with-models "<intent Phase 3>"`.
-3. Executar Pre-Slice Checklist completo (9 itens).
-4. Criar issue de tracking GitHub (template `feature_request.md`) — **antes do código**.
-5. Criar `harness/docs/plans/active/phase-3-<slug>/` com `task-card.md`, `spec.md` (com `## Model Profile`), `progress.md`.
-6. Propor escopo, slices, Model Profile, budget e stop conditions.
-7. Aguardar confirmação do usuário (Mode A) antes de gerar código.
-
-> **Cross-family evaluator**: qualquer slice fact-sensitive (S1) exige evaluator de família diferente do generator. Google/Gemini para generator Anthropic, ou vice-versa.
+Não há slice ativo. O próximo agente deve aguardar instrução explícita do humano para:
+- Iniciar o próximo slice/fase conforme `docs/GUIA-DE-REFATORACAO.md` §15 roadmap.
+- Trabalhar nas issues futuras #13 ou #14.
+- Housekeeping de issues antigas (#1, #4, #7).
 
 ## Do not
 
-- Do not change architecture, the RealWorld contract, or the GraphQL schema without §14 permission.
-- Do not start a 4.x migration before reading §15.3 and executing the Pre-Slice Checklist.
-- Do not store real secrets, credentials, or sensitive payloads.
-- Do not commit without a tracking issue.
+- Do not start a new slice without explicit human instruction.
+- Do not commit without referencing the relevant issue.
+- Do not change architecture, DDD/CQRS layering, RealWorld REST contract, GraphQL schema, or auth semantics without a new §14 decision.
+- Do not store real secrets, credentials, personal data, private prompts, or sensitive payloads.
