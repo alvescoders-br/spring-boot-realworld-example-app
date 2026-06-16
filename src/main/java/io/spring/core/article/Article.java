@@ -65,6 +65,29 @@ public class Article {
     }
   }
 
+  public static Article restored(
+      String id,
+      String userId,
+      String slug,
+      String title,
+      String description,
+      String body,
+      List<Tag> tags,
+      Instant createdAt,
+      Instant updatedAt) {
+    Article article = new Article();
+    article.id = id;
+    article.userId = userId;
+    article.slug = slug;
+    article.title = title;
+    article.description = description;
+    article.body = body;
+    article.tags = tags;
+    article.createdAt = createdAt;
+    article.updatedAt = updatedAt;
+    return article;
+  }
+
   public static String toSlug(String title) {
     return title.toLowerCase().replaceAll("[\\&|[\\uFE30-\\uFFA0]|\\’|\\”|\\s\\?\\,\\.]+", "-");
   }

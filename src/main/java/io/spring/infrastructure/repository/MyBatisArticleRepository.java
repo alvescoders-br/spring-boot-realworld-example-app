@@ -5,10 +5,12 @@ import io.spring.core.article.ArticleRepository;
 import io.spring.core.article.Tag;
 import io.spring.infrastructure.mybatis.mapper.ArticleMapper;
 import java.util.Optional;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
+@Profile("!postgres")
 public class MyBatisArticleRepository implements ArticleRepository {
   private ArticleMapper articleMapper;
 
