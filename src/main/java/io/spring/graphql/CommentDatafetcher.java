@@ -5,6 +5,7 @@ import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsDataFetchingEnvironment;
 import com.netflix.graphql.dgs.InputArgument;
 import graphql.execution.DataFetcherResult;
+import io.spring.DateTimes;
 import io.spring.application.CommentQueryService;
 import io.spring.application.CursorPageParameter;
 import io.spring.application.CursorPager;
@@ -24,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import org.joda.time.format.ISODateTimeFormat;
 
 @DgsComponent
 @AllArgsConstructor
@@ -100,7 +100,8 @@ public class CommentDatafetcher {
 
   private PageInfo buildCommentPageInfo(CursorPager<CommentData> comments) {
     return PageInfo.newBuilder()
-        .startCursor(comments.getStartCursor() == null ? null : comments.getStartCursor().toString())
+        .startCursor(
+            comments.getStartCursor() == null ? null : comments.getStartCursor().toString())
         .endCursor(comments.getEndCursor() == null ? null : comments.getEndCursor().toString())
         .hasPreviousPage(comments.hasPrevious())
         .hasNextPage(comments.hasNext())
@@ -111,8 +112,8 @@ public class CommentDatafetcher {
     return Comment.newBuilder()
         .id(comment.getId())
         .body(comment.getBody())
-        .updatedAt(ISODateTimeFormat.dateTime().withZoneUTC().print(comment.getCreatedAt()))
-        .createdAt(ISODateTimeFormat.dateTime().withZoneUTC().print(comment.getCreatedAt()))
+        .updatedAt(DateTimes.formatUtc(comment.getCreatedAt()))
+        .createdAt(DateTimes.formatUtc(comment.getCreatedAt()))
         .build();
   }
 }

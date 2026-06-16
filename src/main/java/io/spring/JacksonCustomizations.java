@@ -1,7 +1,6 @@
 package io.spring;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
+import java.time.Instant;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tools.jackson.core.JacksonException;
@@ -20,19 +19,19 @@ public class JacksonCustomizations {
 
   public static class RealWorldModules extends SimpleModule {
     public RealWorldModules() {
-      addSerializer(DateTime.class, new DateTimeSerializer());
+      addSerializer(Instant.class, new DateTimeSerializer());
     }
   }
 
-  public static class DateTimeSerializer extends ValueSerializer<DateTime> {
+  public static class DateTimeSerializer extends ValueSerializer<Instant> {
 
     @Override
-    public void serialize(DateTime value, JsonGenerator gen, SerializationContext context)
+    public void serialize(Instant value, JsonGenerator gen, SerializationContext context)
         throws JacksonException {
       if (value == null) {
         gen.writeNull();
       } else {
-        gen.writeString(ISODateTimeFormat.dateTime().withZoneUTC().print(value));
+        gen.writeString(DateTimes.formatUtc(value));
       }
     }
   }

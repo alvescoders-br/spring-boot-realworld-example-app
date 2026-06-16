@@ -1,7 +1,9 @@
 .gradle
 /build/
+/bin/
 !gradle/wrapper/gradle-wrapper.jar
 *.db
+.coda/phase4-slice3-evaluator-recommendation.json
 
 ### STS ###
 .apt_generated
@@ -10,6 +12,9 @@
 .project
 .settings
 .springBeans
+
+### VS Code ###
+.vscode/
 
 ### IntelliJ IDEA ###
 .idea

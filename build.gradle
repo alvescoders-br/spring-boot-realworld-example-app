@@ -50,7 +50,6 @@ dependencies {
                 'io.jsonwebtoken:jjwt-jackson:0.11.2'
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
-    implementation 'joda-time:joda-time:2.10.13'
     implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
