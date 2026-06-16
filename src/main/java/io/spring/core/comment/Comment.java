@@ -24,4 +24,15 @@ public class Comment {
     this.articleId = articleId;
     this.createdAt = DateTimes.now();
   }
+
+  public static Comment restored(
+      String id, String body, String userId, String articleId, Instant createdAt) {
+    Comment comment = new Comment();
+    comment.id = id;
+    comment.body = body;
+    comment.userId = userId;
+    comment.articleId = articleId;
+    comment.createdAt = createdAt;
+    return comment;
+  }
 }
