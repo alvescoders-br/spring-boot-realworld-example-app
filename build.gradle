@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '4.0.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
+    id 'jacoco'
     id "com.netflix.dgs.codegen" version "8.5.0"
     id "com.diffplug.spotless" version "8.6.0"
 }
@@ -69,7 +70,42 @@ dependencies {
 }
 
 tasks.named('test') {
-        useJUnitPlatform()
+    useJUnitPlatform()
+}
+
+jacocoTestReport {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = false
+        csv.required = false
+    }
+}
+
+def coverageModules = [
+    api: 'io/spring/api/**',
+    core: 'io/spring/core/**',
+    infrastructure: 'io/spring/infrastructure/**',
+    application: 'io/spring/application/**'
+]
+
+coverageModules.each { moduleName, classPattern ->
+    tasks.register("jacoco${moduleName.capitalize()}CoverageReport", JacocoReport) {
+        dependsOn tasks.named('test')
+        executionData(layout.buildDirectory.file('jacoco/test.exec'))
+        sourceDirectories.setFrom(files('src/main/java'))
+        classDirectories.setFrom(layout.buildDirectory.dir('classes/java/main').map { classesDirectory ->
+            fileTree(classesDirectory) {
+                include classPattern
+            }
+        })
+        reports {
+            xml.required = true
+            xml.outputLocation = layout.buildDirectory.file("reports/jacoco/${moduleName}/${moduleName}.xml")
+            html.required = false
+            csv.required = false
+        }
+    }
 }
 
 tasks.named('clean', Delete) {

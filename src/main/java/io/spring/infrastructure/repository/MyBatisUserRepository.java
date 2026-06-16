@@ -6,9 +6,11 @@ import io.spring.core.user.UserRepository;
 import io.spring.infrastructure.mybatis.mapper.UserMapper;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@Profile("!postgres")
 public class MyBatisUserRepository implements UserRepository {
   private final UserMapper userMapper;
 

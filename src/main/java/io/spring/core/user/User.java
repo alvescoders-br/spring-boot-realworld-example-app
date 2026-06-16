@@ -18,7 +18,16 @@ public class User {
   private String image;
 
   public User(String email, String username, String password, String bio, String image) {
-    this.id = UUID.randomUUID().toString();
+    this(UUID.randomUUID().toString(), email, username, password, bio, image);
+  }
+
+  public static User restored(
+      String id, String email, String username, String password, String bio, String image) {
+    return new User(id, email, username, password, bio, image);
+  }
+
+  private User(String id, String email, String username, String password, String bio, String image) {
+    this.id = id;
     this.email = email;
     this.username = username;
     this.password = password;
