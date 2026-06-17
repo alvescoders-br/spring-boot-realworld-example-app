@@ -60,11 +60,14 @@ final class JpaReadModelDataMapper {
     if (value == null) {
       return null;
     }
+    if (value instanceof Number number) {
+      return Instant.ofEpochMilli(number.longValue());
+    }
     if (value instanceof Instant instant) {
       return instant;
     }
     if (value instanceof Timestamp timestamp) {
-      return timestamp.toInstant();
+      return timestamp.toLocalDateTime().toInstant(ZoneOffset.UTC);
     }
     if (value instanceof LocalDateTime localDateTime) {
       return localDateTime.toInstant(ZoneOffset.UTC);

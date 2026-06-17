@@ -19,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class JpaCommentReadService implements CommentReadService {
   private static final String COMMENT_DATA_SELECT =
-      "select C.id as commentId, C.body as commentBody, C.created_at as commentCreatedAt, "
+      "select C.id as commentId, C.body as commentBody, "
+          + "extract(epoch from C.created_at) * 1000 as commentCreatedAt, "
           + "C.article_id as commentArticleId, U.id as userId, U.username as userUsername, "
           + "U.bio as userBio, U.image as userImage "
           + "from comments C left join users U on C.user_id = U.id ";

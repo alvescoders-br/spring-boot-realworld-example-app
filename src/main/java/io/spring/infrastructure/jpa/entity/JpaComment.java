@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "comments")
@@ -23,6 +25,7 @@ public class JpaComment {
   @Column(name = "article_id", length = 255)
   private String articleId;
 
+  @JdbcTypeCode(SqlTypes.TIMESTAMP_UTC)
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 

@@ -25,9 +25,11 @@ import io.spring.graphql.DgsConstants.QUERY;
 import io.spring.graphql.types.Article;
 import io.spring.graphql.types.ArticleEdge;
 import io.spring.graphql.types.ArticlesConnection;
+import io.spring.graphql.types.Comment;
 import io.spring.graphql.types.PageInfo;
 import io.spring.graphql.types.Profile;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 
@@ -320,11 +322,13 @@ public class ArticleDatafetcher {
   @DgsData(parentType = COMMENT.TYPE_NAME, field = COMMENT.Article)
   public DataFetcherResult<Article> getCommentArticle(
       DataFetchingEnvironment dataFetchingEnvironment) {
-    CommentData comment = dataFetchingEnvironment.getLocalContext();
+    Comment comment = dataFetchingEnvironment.getSource();
+    Map<String, CommentData> map = dataFetchingEnvironment.getLocalContext();
+    CommentData commentData = map.get(comment.getId());
     User current = SecurityUtil.getCurrentUser().orElse(null);
     ArticleData articleData =
         articleQueryService
-            .findById(comment.getArticleId(), current)
+            .findById(commentData.getArticleId(), current)
             .orElseThrow(ResourceNotFoundException::new);
     Article articleResult = buildArticleResult(articleData);
     return DataFetcherResult.<Article>newResult()

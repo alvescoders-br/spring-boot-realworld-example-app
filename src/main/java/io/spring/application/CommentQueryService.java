@@ -55,7 +55,8 @@ public class CommentQueryService {
 
   public CursorPager<CommentData> findByArticleIdWithCursor(
       String articleId, User user, CursorPageParameter<Instant> page) {
-    List<CommentData> comments = commentReadService.findByArticleIdWithCursor(articleId, page);
+    List<CommentData> comments =
+        new ArrayList<>(commentReadService.findByArticleIdWithCursor(articleId, page));
     if (comments.isEmpty()) {
       return new CursorPager<>(new ArrayList<>(), page.getDirection(), false);
     }
@@ -80,6 +81,6 @@ public class CommentQueryService {
     if (!page.isNext()) {
       Collections.reverse(comments);
     }
-    return new CursorPager<>(comments, page.getDirection(), hasExtra);
+    return new CursorPager<>(comments, page.getDirection(), hasExtra, page.getCursor() != null);
   }
 }

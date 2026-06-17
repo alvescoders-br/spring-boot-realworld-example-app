@@ -10,15 +10,20 @@ public class CursorPager<T extends Node> {
   private boolean previous;
 
   public CursorPager(List<T> data, Direction direction, boolean hasExtra) {
+    this(data, direction, hasExtra, false);
+  }
+
+  public CursorPager(List<T> data, Direction direction, boolean hasExtra, boolean hasCursor) {
     this.data = data;
 
     if (direction == Direction.NEXT) {
-      this.previous = false;
+      this.previous = hasCursor;
       this.next = hasExtra;
-    } else {
-      this.next = false;
-      this.previous = hasExtra;
+      return;
     }
+
+    this.next = hasCursor;
+    this.previous = hasExtra;
   }
 
   public boolean hasNext() {

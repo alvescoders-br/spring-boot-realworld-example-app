@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "articles")
@@ -31,9 +33,11 @@ public class JpaArticle {
   @Column(columnDefinition = "text")
   private String body;
 
+  @JdbcTypeCode(SqlTypes.TIMESTAMP_UTC)
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
+  @JdbcTypeCode(SqlTypes.TIMESTAMP_UTC)
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 

@@ -25,7 +25,8 @@ public class JpaArticleReadService implements ArticleReadService {
       "select "
           + "A.id as articleId, A.slug as articleSlug, A.title as articleTitle, "
           + "A.description as articleDescription, A.body as articleBody, "
-          + "A.created_at as articleCreatedAt, A.updated_at as articleUpdatedAt, "
+          + "extract(epoch from A.created_at) * 1000 as articleCreatedAt, "
+          + "extract(epoch from A.updated_at) * 1000 as articleUpdatedAt, "
           + "T.name as tagName, U.id as userId, U.username as userUsername, "
           + "U.bio as userBio, U.image as userImage "
           + "from articles A "
@@ -49,7 +50,8 @@ public class JpaArticleReadService implements ArticleReadService {
 
   @Override
   public ArticleData findById(String id) {
-    List<ArticleData> articles = findArticleData(ARTICLE_DATA_SELECT + "where A.id = :id", Map.of("id", id));
+    List<ArticleData> articles =
+        findArticleData(ARTICLE_DATA_SELECT + "where A.id = :id", Map.of("id", id));
     return articles.isEmpty() ? null : articles.get(0);
   }
 
@@ -124,7 +126,10 @@ public class JpaArticleReadService implements ArticleReadService {
     if (page.getCursor() != null && page.getDirection() == Direction.PREV) {
       sql.append("and A.created_at > :cursor ");
     }
-    sql.append(page.getDirection() == Direction.PREV ? "order by A.created_at asc " : "order by A.created_at desc ");
+    sql.append(
+        page.getDirection() == Direction.PREV
+            ? "order by A.created_at asc "
+            : "order by A.created_at desc ");
     sql.append("limit :limit");
     Query query = entityManager.createNativeQuery(sql.toString());
     query.setParameter("authors", authors);
@@ -155,9 +160,15 @@ public class JpaArticleReadService implements ArticleReadService {
             "select distinct A.id, A.created_at " + ARTICLE_FILTER_FROM + queryParts.whereClause());
     if (page.getCursor() != null) {
       sql.append(queryParts.hasWhereClause() ? " and " : " where ");
-      sql.append(page.getDirection() == Direction.PREV ? "A.created_at > :cursor" : "A.created_at < :cursor");
+      sql.append(
+          page.getDirection() == Direction.PREV
+              ? "A.created_at > :cursor"
+              : "A.created_at < :cursor");
     }
-    sql.append(page.getDirection() == Direction.PREV ? " order by A.created_at asc" : " order by A.created_at desc");
+    sql.append(
+        page.getDirection() == Direction.PREV
+            ? " order by A.created_at asc"
+            : " order by A.created_at desc");
     sql.append(" limit :limit");
     Query query = entityManager.createNativeQuery(sql.toString());
     bindParameters(query, queryParts.parameters());

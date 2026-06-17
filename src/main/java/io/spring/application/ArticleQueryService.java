@@ -58,9 +58,10 @@ public class ArticleQueryService {
       CursorPageParameter<Instant> page,
       User currentUser) {
     List<String> articleIds =
-        articleReadService.findArticlesWithCursor(tag, author, favoritedBy, page);
+        new ArrayList<>(articleReadService.findArticlesWithCursor(tag, author, favoritedBy, page));
     if (articleIds.size() == 0) {
-      return new CursorPager<>(new ArrayList<>(), page.getDirection(), false);
+      return new CursorPager<>(
+          new ArrayList<>(), page.getDirection(), false, page.getCursor() != null);
     } else {
       boolean hasExtra = articleIds.size() > page.getLimit();
       if (hasExtra) {
@@ -73,7 +74,7 @@ public class ArticleQueryService {
       List<ArticleData> articles = articleReadService.findArticles(articleIds);
       fillExtraInfo(articles, currentUser);
 
-      return new CursorPager<>(articles, page.getDirection(), hasExtra);
+      return new CursorPager<>(articles, page.getDirection(), hasExtra, page.getCursor() != null);
     }
   }
 
@@ -81,10 +82,11 @@ public class ArticleQueryService {
       User user, CursorPageParameter<Instant> page) {
     List<String> followdUsers = userRelationshipQueryService.followedUsers(user.getId());
     if (followdUsers.size() == 0) {
-      return new CursorPager<>(new ArrayList<>(), page.getDirection(), false);
+      return new CursorPager<>(
+          new ArrayList<>(), page.getDirection(), false, page.getCursor() != null);
     } else {
       List<ArticleData> articles =
-          articleReadService.findArticlesOfAuthorsWithCursor(followdUsers, page);
+          new ArrayList<>(articleReadService.findArticlesOfAuthorsWithCursor(followdUsers, page));
       boolean hasExtra = articles.size() > page.getLimit();
       if (hasExtra) {
         articles.remove(page.getLimit());
@@ -93,7 +95,7 @@ public class ArticleQueryService {
         Collections.reverse(articles);
       }
       fillExtraInfo(articles, user);
-      return new CursorPager<>(articles, page.getDirection(), hasExtra);
+      return new CursorPager<>(articles, page.getDirection(), hasExtra, page.getCursor() != null);
     }
   }
 
