@@ -1,9 +1,11 @@
 package io.spring.application.data;
 
-import lombok.Value;
+public record ArticleFavoriteCount(String id, Integer count) {
+  public String getId() {
+    return id;
+  }
 
-@Value
-public class ArticleFavoriteCount {
-  private String id;
-  private Integer count;
+  public Integer getCount() {
+    return count;
+  }
 }
