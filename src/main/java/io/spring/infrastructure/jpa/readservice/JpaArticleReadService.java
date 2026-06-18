@@ -47,14 +47,17 @@ public class JpaArticleReadService implements ArticleReadService {
   @Override
   public ArticleData findById(String id) {
     List<ArticleData> articles =
-        findArticleData(ARTICLE_DATA_SELECT + "where A.id = :id", Map.of("id", id));
+        findArticleData(
+            ARTICLE_DATA_SELECT + "where A.id = :id and A.is_deleted = false", Map.of("id", id));
     return articles.isEmpty() ? null : articles.get(0);
   }
 
   @Override
   public ArticleData findBySlug(String slug) {
     List<ArticleData> articles =
-        findArticleData(ARTICLE_DATA_SELECT + "where A.slug = :slug", Map.of("slug", slug));
+        findArticleData(
+            ARTICLE_DATA_SELECT + "where A.slug = :slug and A.is_deleted = false",
+            Map.of("slug", slug));
     return articles.isEmpty() ? null : articles.get(0);
   }
 
@@ -89,7 +92,8 @@ public class JpaArticleReadService implements ArticleReadService {
       return List.of();
     }
     return findArticleData(
-        ARTICLE_DATA_SELECT + "where A.id in (:articleIds) order by A.created_at desc",
+        ARTICLE_DATA_SELECT
+            + "where A.id in (:articleIds) and A.is_deleted = false order by A.created_at desc",
         Map.of("articleIds", articleIds));
   }
 
@@ -101,7 +105,7 @@ public class JpaArticleReadService implements ArticleReadService {
     Query query =
         entityManager.createNativeQuery(
             ARTICLE_DATA_SELECT
-                + "where A.user_id in (:authors) "
+                + "where A.user_id in (:authors) and A.is_deleted = false "
                 + "order by A.created_at desc limit :limit offset :offset");
     query.setParameter("authors", authors);
     query.setParameter("limit", page.getLimit());
@@ -115,7 +119,9 @@ public class JpaArticleReadService implements ArticleReadService {
     if (authors == null || authors.isEmpty()) {
       return List.of();
     }
-    StringBuilder sql = new StringBuilder(ARTICLE_DATA_SELECT + "where A.user_id in (:authors) ");
+    StringBuilder sql =
+        new StringBuilder(
+            ARTICLE_DATA_SELECT + "where A.user_id in (:authors) and A.is_deleted = false ");
     if (page.getCursor() != null && page.getDirection() == Direction.NEXT) {
       sql.append("and A.created_at < :cursor ");
     }
@@ -142,7 +148,8 @@ public class JpaArticleReadService implements ArticleReadService {
       return 0;
     }
     Query query =
-        entityManager.createNativeQuery("select count(1) from articles A where A.user_id in (:authors)");
+        entityManager.createNativeQuery(
+            "select count(1) from articles A where A.user_id in (:authors) and A.is_deleted = false");
     query.setParameter("authors", authors);
     return ((Number) query.getSingleResult()).intValue();
   }
@@ -184,6 +191,7 @@ public class JpaArticleReadService implements ArticleReadService {
   private QueryParts articleFilterWhere(String tag, String author, String favoritedBy) {
     List<String> conditions = new ArrayList<>();
     java.util.LinkedHashMap<String, Object> parameters = new java.util.LinkedHashMap<>();
+    conditions.add("A.is_deleted = false");
     if (tag != null) {
       conditions.add("T.name = :tag");
       parameters.put("tag", tag);
@@ -195,9 +203,6 @@ public class JpaArticleReadService implements ArticleReadService {
     if (favoritedBy != null) {
       conditions.add("AFU.username = :favoritedBy");
       parameters.put("favoritedBy", favoritedBy);
-    }
-    if (conditions.isEmpty()) {
-      return new QueryParts("", parameters);
     }
     return new QueryParts(" where " + String.join(" and ", conditions), parameters);
   }

@@ -141,6 +141,65 @@ public class JpaReadServicePostgresIntegrationTest {
     assertDirectReadServiceMethods(newestArticle, olderArticle, author, reader, suffix);
   }
 
+  @Test
+  public void should_exclude_soft_deleted_articles_from_rest_read_paths() {
+    String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+    User author = user("soft-delete-author-" + suffix);
+    User reader = user("soft-delete-reader-" + suffix);
+    userRepository.save(author);
+    userRepository.save(reader);
+    userRepository.saveRelation(new FollowRelation(reader.getId(), author.getId()));
+
+    Article visibleArticle =
+        article(
+            "Soft Delete Visible " + suffix,
+            List.of("visible"),
+            author,
+            Instant.parse("2026-06-18T12:00:00Z"));
+    Article deletedArticle =
+        article(
+            "Soft Delete Hidden " + suffix,
+            List.of("hidden"),
+            author,
+            Instant.parse("2026-06-18T11:00:00Z"));
+    articleRepository.save(visibleArticle);
+    articleRepository.save(deletedArticle);
+    articleFavoriteRepository.save(new ArticleFavorite(deletedArticle.getId(), reader.getId()));
+
+    articleRepository.remove(deletedArticle);
+
+    Assertions.assertTrue(articleQueryService.findBySlug(deletedArticle.getSlug(), reader).isEmpty());
+    Assertions.assertNull(articleReadService.findById(deletedArticle.getId()));
+    Assertions.assertTrue(articleReadService.findArticles(List.of(deletedArticle.getId())).isEmpty());
+    Assertions.assertEquals(0, articleFavoritesReadService.articleFavoriteCount(deletedArticle.getId()));
+    Assertions.assertFalse(
+        articleFavoritesReadService.isUserFavorite(reader.getId(), deletedArticle.getId()));
+
+    ArticleDataList recentArticles =
+        articleQueryService.findRecentArticles(null, null, null, new Page(), reader);
+    Assertions.assertEquals(1, recentArticles.getCount());
+    Assertions.assertEquals(visibleArticle.getId(), recentArticles.getArticleDatas().get(0).getId());
+
+    ArticleDataList deletedByTag =
+        articleQueryService.findRecentArticles("hidden", null, null, new Page(), reader);
+    Assertions.assertEquals(0, deletedByTag.getCount());
+    Assertions.assertTrue(deletedByTag.getArticleDatas().isEmpty());
+
+    ArticleDataList deletedByFavorite =
+        articleQueryService.findRecentArticles(null, null, reader.getUsername(), new Page(), reader);
+    Assertions.assertEquals(0, deletedByFavorite.getCount());
+    Assertions.assertTrue(deletedByFavorite.getArticleDatas().isEmpty());
+
+    ArticleDataList feed = articleQueryService.findUserFeed(reader, new Page());
+    Assertions.assertEquals(1, feed.getCount());
+    Assertions.assertEquals(visibleArticle.getId(), feed.getArticleDatas().get(0).getId());
+    Assertions.assertEquals(1, articleReadService.countFeedSize(List.of(author.getId())));
+    Assertions.assertEquals(
+        List.of(visibleArticle.getId()),
+        articleReadService.findArticlesWithCursor(
+            null, null, null, new CursorPageParameter<>(null, 10, Direction.NEXT)));
+  }
+
   private void assertDirectReadServiceMethods(
       Article newestArticle, Article olderArticle, User author, User reader, String suffix) {
     Assertions.assertEquals(newestArticle.getId(), articleReadService.findById(newestArticle.getId()).getId());

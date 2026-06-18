@@ -43,18 +43,18 @@ public class JpaArticleRepository implements ArticleRepository {
 
   @Override
   public Optional<Article> findById(String id) {
-    return articleRepository.findById(id).map(this::toDomain);
+    return articleRepository.findByIdAndDeletedFalse(id).map(this::toDomain);
   }
 
   @Override
   public Optional<Article> findBySlug(String slug) {
-    return articleRepository.findBySlug(slug).map(this::toDomain);
+    return articleRepository.findBySlugAndDeletedFalse(slug).map(this::toDomain);
   }
 
   @Override
   @Transactional
   public void remove(Article article) {
-    articleRepository.deleteById(article.getId());
+    articleRepository.softDeleteById(article.getId());
   }
 
   private void createNew(Article article) {

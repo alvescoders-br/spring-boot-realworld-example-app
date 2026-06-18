@@ -202,6 +202,32 @@ class GraphqlReadModelPostgresIntegrationTest {
   }
 
   @Test
+  void graphqlDeleteArticleShouldSoftDeleteAndHideArticleFromQueries() {
+    authenticateAs(author);
+
+    Map<String, Object> deleteData =
+        executeData(
+            String.format(
+                "mutation { deleteArticle(slug: \"%s\") { success } }", newestArticle.getSlug()));
+    Map<String, Object> deletionStatus = mapValue(deleteData, "deleteArticle");
+    assertThat(deletionStatus).containsEntry("success", true);
+    assertThat(articleRepository.findById(newestArticle.getId())).isEmpty();
+
+    ExecutionResult deletedArticleResult =
+        dgsQueryExecutor.execute(
+            String.format("{ article(slug: \"%s\") { slug } }", newestArticle.getSlug()));
+    assertThat(deletedArticleResult.getErrors()).isNotEmpty();
+
+    Map<String, Object> articlesData =
+        executeData("{ articles(first: 5) { edges { node { slug } } } }");
+    List<Map<String, Object>> articleEdges = mapList(mapValue(articlesData, "articles"), "edges");
+    assertThat(articleEdges)
+        .extracting(edge -> (String) mapValue(edge, "node").get("slug"))
+        .contains(olderArticle.getSlug())
+        .doesNotContain(newestArticle.getSlug());
+  }
+
+  @Test
   void graphqlProfileAndTagsShouldPreserveReadModelShape() {
     Map<String, Object> data =
         executeData(

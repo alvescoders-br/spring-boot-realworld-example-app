@@ -7,6 +7,7 @@ import io.spring.core.favorite.ArticleFavorite;
 import io.spring.core.favorite.ArticleFavoriteRepository;
 import io.spring.core.user.User;
 import io.spring.core.user.UserRepository;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,6 +29,8 @@ public class JpaArticleRepositoryPostgresIntegrationTest {
   @Autowired private ArticleFavoriteRepository articleFavoriteRepository;
 
   @Autowired private UserRepository userRepository;
+
+  @Autowired private EntityManager entityManager;
 
   @Test
   public void should_validate_schema_and_execute_article_and_favorite_repositories() {
@@ -96,5 +99,13 @@ public class JpaArticleRepositoryPostgresIntegrationTest {
 
     articleRepository.remove(article);
     Assertions.assertTrue(articleRepository.findById(article.getId()).isEmpty());
+    Number softDeletedRows =
+        (Number)
+            entityManager
+                .createNativeQuery(
+                    "select count(1) from articles where id = :id and is_deleted = true")
+                .setParameter("id", article.getId())
+                .getSingleResult();
+    Assertions.assertEquals(1, softDeletedRows.intValue());
   }
 }

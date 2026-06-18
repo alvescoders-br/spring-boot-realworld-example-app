@@ -21,7 +21,7 @@ public class JpaArticle {
   @Column(name = "user_id", length = 255)
   private String userId;
 
-  @Column(length = 255, unique = true)
+  @Column(length = 255)
   private String slug;
 
   @Column(length = 255)
@@ -41,6 +41,9 @@ public class JpaArticle {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
+  @Column(name = "is_deleted", nullable = false)
+  private boolean deleted;
+
   protected JpaArticle() {}
 
   private JpaArticle(
@@ -51,7 +54,8 @@ public class JpaArticle {
       String description,
       String body,
       Instant createdAt,
-      Instant updatedAt) {
+      Instant updatedAt,
+      boolean deleted) {
     this.id = id;
     this.userId = userId;
     this.slug = slug;
@@ -60,6 +64,7 @@ public class JpaArticle {
     this.body = body;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.deleted = deleted;
   }
 
   public static JpaArticle fromDomain(Article article) {
@@ -71,11 +76,16 @@ public class JpaArticle {
         article.getDescription(),
         article.getBody(),
         article.getCreatedAt(),
-        article.getUpdatedAt());
+        article.getUpdatedAt(),
+        false);
   }
 
   public String getId() {
     return id;
+  }
+
+  public boolean isDeleted() {
+    return deleted;
   }
 
   public Article toDomain(List<Tag> tags) {

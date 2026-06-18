@@ -24,7 +24,10 @@ public class JpaArticleFavoritesReadService implements ArticleFavoritesReadServi
   public boolean isUserFavorite(String userId, String articleId) {
     Query query =
         entityManager.createNativeQuery(
-            "select count(1) from article_favorites where user_id = :userId and article_id = :articleId");
+            "select count(1) from article_favorites AF "
+                + "join articles A on A.id = AF.article_id "
+                + "where AF.user_id = :userId and AF.article_id = :articleId "
+                + "and A.is_deleted = false");
     query.setParameter("userId", userId);
     query.setParameter("articleId", articleId);
     return ((Number) query.getSingleResult()).intValue() > 0;
@@ -34,7 +37,9 @@ public class JpaArticleFavoritesReadService implements ArticleFavoritesReadServi
   public int articleFavoriteCount(String articleId) {
     Query query =
         entityManager.createNativeQuery(
-            "select count(1) from article_favorites where article_id = :articleId");
+            "select count(1) from article_favorites AF "
+                + "join articles A on A.id = AF.article_id "
+                + "where AF.article_id = :articleId and A.is_deleted = false");
     query.setParameter("articleId", articleId);
     return ((Number) query.getSingleResult()).intValue();
   }
@@ -49,7 +54,7 @@ public class JpaArticleFavoritesReadService implements ArticleFavoritesReadServi
             "select A.id, count(AF.user_id) as favoriteCount "
                 + "from articles A "
                 + "left join article_favorites AF on A.id = AF.article_id "
-                + "where A.id in (:ids) group by A.id");
+                + "where A.id in (:ids) and A.is_deleted = false group by A.id");
     query.setParameter("ids", ids);
     return ((List<Object[]>) query.getResultList())
         .stream()
@@ -69,7 +74,7 @@ public class JpaArticleFavoritesReadService implements ArticleFavoritesReadServi
         entityManager.createNativeQuery(
             "select A.id from articles A "
                 + "left join article_favorites AF on A.id = AF.article_id "
-                + "where A.id in (:ids) and AF.user_id = :userId");
+                + "where A.id in (:ids) and AF.user_id = :userId and A.is_deleted = false");
     query.setParameter("ids", ids);
     query.setParameter("userId", currentUser.getId());
     return ((List<Object>) query.getResultList())

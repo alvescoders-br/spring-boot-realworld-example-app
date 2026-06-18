@@ -81,7 +81,7 @@ public class JpaArticleRepositoryTest {
   @Test
   public void should_find_article_by_slug_with_tags() {
     Article article = article("find me", List.of("java", "spring"));
-    when(springDataArticleRepository.findBySlug(article.getSlug()))
+    when(springDataArticleRepository.findBySlugAndDeletedFalse(article.getSlug()))
         .thenReturn(Optional.of(JpaArticle.fromDomain(article)));
     when(springDataArticleTagRelationRepository.findByIdArticleId(article.getId()))
         .thenReturn(
@@ -126,7 +126,7 @@ public class JpaArticleRepositoryTest {
             existingArticle.getCreatedAt(),
             Instant.parse("2026-06-16T11:00:00.000Z"));
     when(springDataArticleRepository.existsById(existingArticle.getId())).thenReturn(true);
-    when(springDataArticleRepository.findById(existingArticle.getId()))
+    when(springDataArticleRepository.findByIdAndDeletedFalse(existingArticle.getId()))
         .thenReturn(Optional.of(JpaArticle.fromDomain(existingArticle)));
     when(springDataArticleTagRelationRepository.findByIdArticleId(existingArticle.getId()))
         .thenReturn(List.of(new JpaArticleTagRelation(existingArticle.getId(), tagId(existingArticle, "java"))));
@@ -150,12 +150,13 @@ public class JpaArticleRepositoryTest {
   }
 
   @Test
-  public void should_remove_article_by_id() {
+  public void should_soft_delete_article_by_id() {
     Article article = article("delete me", List.of("java"));
 
     articleRepository.remove(article);
 
-    verify(springDataArticleRepository).deleteById(article.getId());
+    verify(springDataArticleRepository).softDeleteById(article.getId());
+    verify(springDataArticleRepository, never()).deleteById(article.getId());
   }
 
   private Article article(String title, List<String> tags) {
