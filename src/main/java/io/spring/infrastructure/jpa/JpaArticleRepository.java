@@ -13,12 +13,10 @@ import io.spring.infrastructure.jpa.repository.SpringDataJpaArticleTagRelationRe
 import io.spring.infrastructure.jpa.repository.SpringDataJpaTagRepository;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Profile("postgres")
 public class JpaArticleRepository implements ArticleRepository {
   private final SpringDataJpaArticleRepository articleRepository;
   private final SpringDataJpaTagRepository tagRepository;

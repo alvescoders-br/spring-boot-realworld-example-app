@@ -2,13 +2,11 @@ package io.spring.infrastructure.jpa;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.spring.core.article.Article;
-import io.spring.core.article.ArticleRepository;
 import io.spring.core.article.Tag;
 import io.spring.infrastructure.jpa.entity.JpaArticle;
 import io.spring.infrastructure.jpa.entity.JpaArticleTagRelation;
@@ -17,11 +15,8 @@ import io.spring.infrastructure.jpa.entity.JpaTag;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaArticleRepository;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaArticleTagRelationRepository;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaTagRepository;
-import io.spring.infrastructure.mybatis.mapper.ArticleMapper;
-import io.spring.infrastructure.repository.MyBatisArticleRepository;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 @ExtendWith(MockitoExtension.class)
 public class JpaArticleRepositoryTest {
@@ -162,43 +156,6 @@ public class JpaArticleRepositoryTest {
     articleRepository.remove(article);
 
     verify(springDataArticleRepository).deleteById(article.getId());
-  }
-
-  @Test
-  public void should_select_jpa_article_repository_in_spring_context_for_postgres_profile() {
-    try (AnnotationConfigApplicationContext context = repositoryContext("postgres")) {
-      Map<String, ArticleRepository> repositories = context.getBeansOfType(ArticleRepository.class);
-
-      Assertions.assertEquals(1, repositories.size());
-      Assertions.assertInstanceOf(JpaArticleRepository.class, repositories.values().iterator().next());
-      Assertions.assertFalse(context.containsBean("myBatisArticleRepository"));
-    }
-  }
-
-  @Test
-  public void should_select_mybatis_article_repository_without_postgres_profile() {
-    try (AnnotationConfigApplicationContext context = repositoryContext()) {
-      Map<String, ArticleRepository> repositories = context.getBeansOfType(ArticleRepository.class);
-
-      Assertions.assertEquals(1, repositories.size());
-      Assertions.assertInstanceOf(MyBatisArticleRepository.class, repositories.values().iterator().next());
-      Assertions.assertFalse(context.containsBean("jpaArticleRepository"));
-    }
-  }
-
-  private AnnotationConfigApplicationContext repositoryContext(String... activeProfiles) {
-    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-    context.getEnvironment().setActiveProfiles(activeProfiles);
-    context.registerBean(
-        SpringDataJpaArticleRepository.class, () -> mock(SpringDataJpaArticleRepository.class));
-    context.registerBean(SpringDataJpaTagRepository.class, () -> mock(SpringDataJpaTagRepository.class));
-    context.registerBean(
-        SpringDataJpaArticleTagRelationRepository.class,
-        () -> mock(SpringDataJpaArticleTagRelationRepository.class));
-    context.registerBean(ArticleMapper.class, () -> mock(ArticleMapper.class));
-    context.register(JpaArticleRepository.class, MyBatisArticleRepository.class);
-    context.refresh();
-    return context;
   }
 
   private Article article(String title, List<String> tags) {

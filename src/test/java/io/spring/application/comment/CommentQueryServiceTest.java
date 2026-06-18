@@ -10,9 +10,9 @@ import io.spring.core.user.FollowRelation;
 import io.spring.core.user.User;
 import io.spring.core.user.UserRepository;
 import io.spring.infrastructure.DbTestBase;
-import io.spring.infrastructure.repository.MyBatisArticleRepository;
-import io.spring.infrastructure.repository.MyBatisCommentRepository;
-import io.spring.infrastructure.repository.MyBatisUserRepository;
+import io.spring.infrastructure.jpa.JpaArticleRepository;
+import io.spring.infrastructure.jpa.JpaCommentRepository;
+import io.spring.infrastructure.jpa.JpaUserRepository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -23,10 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
 @Import({
-  MyBatisCommentRepository.class,
-  MyBatisUserRepository.class,
+  JpaCommentRepository.class,
+  JpaUserRepository.class,
   CommentQueryService.class,
-  MyBatisArticleRepository.class
+  JpaArticleRepository.class
 })
 public class CommentQueryServiceTest extends DbTestBase {
   @Autowired private CommentRepository commentRepository;

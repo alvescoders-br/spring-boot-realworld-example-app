@@ -4,14 +4,14 @@ import io.spring.application.TagsQueryService;
 import io.spring.core.article.Article;
 import io.spring.core.article.ArticleRepository;
 import io.spring.infrastructure.DbTestBase;
-import io.spring.infrastructure.repository.MyBatisArticleRepository;
+import io.spring.infrastructure.jpa.JpaArticleRepository;
 import java.util.Arrays;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@Import({TagsQueryService.class, MyBatisArticleRepository.class})
+@Import({TagsQueryService.class, JpaArticleRepository.class})
 public class TagsQueryServiceTest extends DbTestBase {
   @Autowired private TagsQueryService tagsQueryService;
 

@@ -6,12 +6,10 @@ import io.spring.infrastructure.jpa.entity.JpaArticleFavorite;
 import io.spring.infrastructure.jpa.entity.JpaArticleFavoriteId;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaArticleFavoriteRepository;
 import java.util.Optional;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Profile("postgres")
 public class JpaArticleFavoriteRepository implements ArticleFavoriteRepository {
   private final SpringDataJpaArticleFavoriteRepository articleFavoriteRepository;
 

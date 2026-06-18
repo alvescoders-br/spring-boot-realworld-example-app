@@ -4,21 +4,17 @@ import io.spring.application.CursorPageParameter;
 import io.spring.application.CursorPager.Direction;
 import io.spring.application.Page;
 import io.spring.application.data.ArticleData;
-import io.spring.infrastructure.mybatis.readservice.ArticleReadService;
+import io.spring.infrastructure.readservice.ArticleReadService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Primary
-@Profile("postgres")
 @Transactional(readOnly = true)
 public class JpaArticleReadService implements ArticleReadService {
   private static final String ARTICLE_DATA_SELECT =

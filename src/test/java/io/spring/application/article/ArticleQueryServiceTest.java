@@ -17,9 +17,9 @@ import io.spring.core.user.FollowRelation;
 import io.spring.core.user.User;
 import io.spring.core.user.UserRepository;
 import io.spring.infrastructure.DbTestBase;
-import io.spring.infrastructure.repository.MyBatisArticleFavoriteRepository;
-import io.spring.infrastructure.repository.MyBatisArticleRepository;
-import io.spring.infrastructure.repository.MyBatisUserRepository;
+import io.spring.infrastructure.jpa.JpaArticleFavoriteRepository;
+import io.spring.infrastructure.jpa.JpaArticleRepository;
+import io.spring.infrastructure.jpa.JpaUserRepository;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
@@ -31,9 +31,9 @@ import org.springframework.context.annotation.Import;
 
 @Import({
   ArticleQueryService.class,
-  MyBatisUserRepository.class,
-  MyBatisArticleRepository.class,
-  MyBatisArticleFavoriteRepository.class
+  JpaUserRepository.class,
+  JpaArticleRepository.class,
+  JpaArticleFavoriteRepository.class
 })
 public class ArticleQueryServiceTest extends DbTestBase {
   @Autowired private ArticleQueryService queryService;

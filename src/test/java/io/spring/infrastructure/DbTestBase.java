@@ -1,14 +1,18 @@
 package io.spring.infrastructure;
 
-import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
+import org.springframework.test.context.jdbc.SqlConfig;
+import org.springframework.test.context.jdbc.SqlConfig.TransactionMode;
+import org.springframework.transaction.annotation.Transactional;
 
-@ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-@ImportAutoConfiguration(FlywayAutoConfiguration.class)
-@MybatisTest
+@ActiveProfiles("postgres")
+@SpringBootTest
+@Transactional
+@Sql(
+    scripts = "/sql/truncate-all.sql",
+    executionPhase = ExecutionPhase.BEFORE_TEST_METHOD,
+    config = @SqlConfig(transactionMode = TransactionMode.ISOLATED))
 public abstract class DbTestBase {}

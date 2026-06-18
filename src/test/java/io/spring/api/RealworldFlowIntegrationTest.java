@@ -25,7 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
  * altera nenhum código de produção. Issue de tracking: #7.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
+@ActiveProfiles("postgres")
 public class RealworldFlowIntegrationTest {
 
   @LocalServerPort private int port;
@@ -37,7 +37,7 @@ public class RealworldFlowIntegrationTest {
 
   @Test
   void fullRealworldFlowShouldPreserveContractEnvelopes() {
-    // Unique identifiers per run to avoid conflicts with in-memory SQLite state
+    // Unique identifiers per run to avoid conflicts with persisted test state
     String uniqueSuffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
     String email = "flow-" + uniqueSuffix + "@example.com";
     String username = "user-" + uniqueSuffix;

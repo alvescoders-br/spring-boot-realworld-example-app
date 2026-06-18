@@ -5,12 +5,10 @@ import io.spring.core.comment.CommentRepository;
 import io.spring.infrastructure.jpa.entity.JpaComment;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaCommentRepository;
 import java.util.Optional;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Profile("postgres")
 public class JpaCommentRepository implements CommentRepository {
   private final SpringDataJpaCommentRepository commentRepository;
 

@@ -14,9 +14,6 @@ import io.spring.infrastructure.jpa.entity.JpaFollowRelationId;
 import io.spring.infrastructure.jpa.entity.JpaUser;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaFollowRelationRepository;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaUserRepository;
-import io.spring.infrastructure.mybatis.mapper.UserMapper;
-import io.spring.infrastructure.repository.MyBatisUserRepository;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,30 +115,8 @@ public class JpaUserRepositoryTest {
   }
 
   @Test
-  public void should_select_jpa_repository_in_spring_context_for_postgres_profile() {
-    try (AnnotationConfigApplicationContext context = repositoryContext("postgres")) {
-      Map<String, UserRepository> repositories = context.getBeansOfType(UserRepository.class);
-
-      Assertions.assertEquals(1, repositories.size());
-      Assertions.assertInstanceOf(JpaUserRepository.class, repositories.values().iterator().next());
-      Assertions.assertFalse(context.containsBean("myBatisUserRepository"));
-    }
-  }
-
-  @Test
-  public void should_select_mybatis_repository_in_spring_context_without_postgres_profile() {
-    try (AnnotationConfigApplicationContext context = repositoryContext()) {
-      Map<String, UserRepository> repositories = context.getBeansOfType(UserRepository.class);
-
-      Assertions.assertEquals(1, repositories.size());
-      Assertions.assertInstanceOf(MyBatisUserRepository.class, repositories.values().iterator().next());
-      Assertions.assertFalse(context.containsBean("jpaUserRepository"));
-    }
-  }
-
-  @Test
-  public void should_execute_operations_through_postgres_profile_spring_context() {
-    try (AnnotationConfigApplicationContext context = repositoryContext("postgres")) {
+  public void should_execute_all_user_operations_through_spring_context() {
+    try (AnnotationConfigApplicationContext context = buildContext()) {
       UserRepository repository = context.getBean(UserRepository.class);
       SpringDataJpaUserRepository springDataUsers =
           context.getBean(SpringDataJpaUserRepository.class);
@@ -180,16 +155,14 @@ public class JpaUserRepositoryTest {
     }
   }
 
-  private AnnotationConfigApplicationContext repositoryContext(String... activeProfiles) {
+  private AnnotationConfigApplicationContext buildContext() {
     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-    context.getEnvironment().setActiveProfiles(activeProfiles);
     context.registerBean(
         SpringDataJpaUserRepository.class, () -> mock(SpringDataJpaUserRepository.class));
     context.registerBean(
         SpringDataJpaFollowRelationRepository.class,
         () -> mock(SpringDataJpaFollowRelationRepository.class));
-    context.registerBean(UserMapper.class, () -> mock(UserMapper.class));
-    context.register(JpaUserRepository.class, MyBatisUserRepository.class);
+    context.register(JpaUserRepository.class);
     context.refresh();
     return context;
   }

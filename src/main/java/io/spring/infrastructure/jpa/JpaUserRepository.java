@@ -9,12 +9,10 @@ import io.spring.infrastructure.jpa.entity.JpaUser;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaFollowRelationRepository;
 import io.spring.infrastructure.jpa.repository.SpringDataJpaUserRepository;
 import java.util.Optional;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Profile("postgres")
 public class JpaUserRepository implements UserRepository {
   private final SpringDataJpaUserRepository userRepository;
   private final SpringDataJpaFollowRelationRepository followRelationRepository;

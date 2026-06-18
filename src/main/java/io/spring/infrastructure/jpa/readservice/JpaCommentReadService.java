@@ -3,19 +3,15 @@ package io.spring.infrastructure.jpa.readservice;
 import io.spring.application.CursorPageParameter;
 import io.spring.application.CursorPager.Direction;
 import io.spring.application.data.CommentData;
-import io.spring.infrastructure.mybatis.readservice.CommentReadService;
+import io.spring.infrastructure.readservice.CommentReadService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.time.Instant;
 import java.util.List;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Primary
-@Profile("postgres")
 @Transactional(readOnly = true)
 public class JpaCommentReadService implements CommentReadService {
   private static final String COMMENT_DATA_SELECT =

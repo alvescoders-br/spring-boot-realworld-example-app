@@ -1,18 +1,14 @@
 package io.spring.infrastructure.jpa.readservice;
 
 import io.spring.application.data.UserData;
-import io.spring.infrastructure.mybatis.readservice.UserReadService;
+import io.spring.infrastructure.readservice.UserReadService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.util.List;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Primary
-@Profile("postgres")
 @Transactional(readOnly = true)
 public class JpaUserReadService implements UserReadService {
   private final EntityManager entityManager;
