@@ -84,6 +84,7 @@ class GraphqlReadModelPostgresIntegrationTest {
     newestArticle =
         article(
             "GraphQL newest " + suffix,
+            "word ".repeat(201).trim(),
             List.of("spring", "java"),
             author,
             Instant.parse("2026-06-17T12:00:00Z"));
@@ -131,7 +132,7 @@ class GraphqlReadModelPostgresIntegrationTest {
     Map<String, Object> articlesQuery =
         executeData(
             "{ articles(first: 1) {"
-                + " edges { cursor node { slug title tagList favorited favoritesCount author { username following } } }"
+                + " edges { cursor node { slug title tagList favorited favoritesCount readingTime author { username following } } }"
                 + " pageInfo { hasNextPage hasPreviousPage startCursor endCursor }"
                 + " } }");
 
@@ -144,6 +145,7 @@ class GraphqlReadModelPostgresIntegrationTest {
     assertThat(firstArticleNode.get("slug")).isEqualTo(newestArticle.getSlug());
     assertThat(firstArticleNode.get("favorited")).isEqualTo(true);
     assertThat(firstArticleNode.get("favoritesCount")).isEqualTo(1);
+    assertThat(firstArticleNode.get("readingTime")).isEqualTo(2);
     assertThat((List<String>) firstArticleNode.get("tagList")).containsExactlyInAnyOrder("spring", "java");
     assertThat(mapValue(firstArticleNode, "author")).containsEntry("username", author.getUsername());
     assertThat(mapValue(firstArticleNode, "author")).containsEntry("following", true);
@@ -366,7 +368,12 @@ class GraphqlReadModelPostgresIntegrationTest {
   }
 
   private Article article(String title, List<String> tags, User articleAuthor, Instant createdAt) {
-    return new Article(title, "description", "body", tags, articleAuthor.getId(), createdAt);
+    return article(title, "body", tags, articleAuthor, createdAt);
+  }
+
+  private Article article(
+      String title, String body, List<String> tags, User articleAuthor, Instant createdAt) {
+    return new Article(title, "description", body, tags, articleAuthor.getId(), createdAt);
   }
 
   private void authenticateAs(User currentUser) {

@@ -26,6 +26,15 @@ public class ArticleData implements io.spring.application.Node {
   @JsonProperty("author")
   private ProfileData profileData;
 
+  public int getReadingTime() {
+    if (body == null || body.isBlank()) {
+      return 0;
+    }
+
+    int wordCount = body.trim().split("\\s+").length;
+    return (wordCount + 199) / 200;
+  }
+
   @Override
   public DateTimeCursor getCursor() {
     return new DateTimeCursor(updatedAt);

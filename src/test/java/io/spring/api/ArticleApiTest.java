@@ -56,11 +56,12 @@ public class ArticleApiTest extends TestWithCurrentUser {
   public void should_read_article_success() throws Exception {
     String slug = "test-new-article";
     Instant time = DateTimes.now();
+    String body = "word ".repeat(201).trim();
     Article article =
         new Article(
             "Test New Article",
             "Desc",
-            "Body",
+            body,
             Arrays.asList("java", "spring", "jpg"),
             user.getId(),
             time);
@@ -74,6 +75,7 @@ public class ArticleApiTest extends TestWithCurrentUser {
         .statusCode(200)
         .body("article.slug", equalTo(slug))
         .body("article.body", equalTo(articleData.getBody()))
+        .body("article.readingTime", equalTo(2))
         .body("article.createdAt", equalTo(DateTimes.formatUtc(time)));
   }
 
