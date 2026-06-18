@@ -4,6 +4,7 @@ import io.spring.application.CursorPageParameter;
 import io.spring.application.CursorPager.Direction;
 import io.spring.application.Page;
 import io.spring.application.data.ArticleData;
+import io.spring.infrastructure.jpa.repository.SpringDataJpaArticleRepository;
 import io.spring.infrastructure.readservice.ArticleReadService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -23,6 +24,7 @@ public class JpaArticleReadService implements ArticleReadService {
           + "A.description as articleDescription, A.body as articleBody, "
           + "extract(epoch from A.created_at) * 1000 as articleCreatedAt, "
           + "extract(epoch from A.updated_at) * 1000 as articleUpdatedAt, "
+          + "A.reading_time as articleReadingTime, "
           + "T.name as tagName, U.id as userId, U.username as userUsername, "
           + "U.bio as userBio, U.image as userImage "
           + "from articles A "
@@ -39,12 +41,16 @@ public class JpaArticleReadService implements ArticleReadService {
           + "left join users AFU on AFU.id = AF.user_id ";
 
   private final EntityManager entityManager;
+  private final SpringDataJpaArticleRepository articleRepository;
 
-  public JpaArticleReadService(EntityManager entityManager) {
+  public JpaArticleReadService(
+      EntityManager entityManager, SpringDataJpaArticleRepository articleRepository) {
     this.entityManager = entityManager;
+    this.articleRepository = articleRepository;
   }
 
   @Override
+  @Transactional
   public ArticleData findById(String id) {
     List<ArticleData> articles =
         findArticleData(
@@ -53,6 +59,7 @@ public class JpaArticleReadService implements ArticleReadService {
   }
 
   @Override
+  @Transactional
   public ArticleData findBySlug(String slug) {
     List<ArticleData> articles =
         findArticleData(
@@ -87,6 +94,7 @@ public class JpaArticleReadService implements ArticleReadService {
   }
 
   @Override
+  @Transactional
   public List<ArticleData> findArticles(List<String> articleIds) {
     if (articleIds == null || articleIds.isEmpty()) {
       return List.of();
@@ -98,6 +106,7 @@ public class JpaArticleReadService implements ArticleReadService {
   }
 
   @Override
+  @Transactional
   public List<ArticleData> findArticlesOfAuthors(List<String> authors, Page page) {
     if (authors == null || authors.isEmpty()) {
       return List.of();
@@ -110,10 +119,13 @@ public class JpaArticleReadService implements ArticleReadService {
     query.setParameter("authors", authors);
     query.setParameter("limit", page.getLimit());
     query.setParameter("offset", page.getOffset());
-    return JpaReadModelDataMapper.toArticleDataList(query.getResultList());
+    List<ArticleData> articles = JpaReadModelDataMapper.toArticleDataList(query.getResultList());
+    cacheMissingReadingTimes(articles);
+    return articles;
   }
 
   @Override
+  @Transactional
   public List<ArticleData> findArticlesOfAuthorsWithCursor(
       List<String> authors, CursorPageParameter page) {
     if (authors == null || authors.isEmpty()) {
@@ -139,7 +151,9 @@ public class JpaArticleReadService implements ArticleReadService {
       query.setParameter("cursor", page.getCursor());
     }
     query.setParameter("limit", page.getQueryLimit());
-    return JpaReadModelDataMapper.toArticleDataList(query.getResultList());
+    List<ArticleData> articles = JpaReadModelDataMapper.toArticleDataList(query.getResultList());
+    cacheMissingReadingTimes(articles);
+    return articles;
   }
 
   @Override
@@ -185,7 +199,20 @@ public class JpaArticleReadService implements ArticleReadService {
   private List<ArticleData> findArticleData(String sql, Map<String, Object> parameters) {
     Query query = entityManager.createNativeQuery(sql);
     bindParameters(query, parameters);
-    return JpaReadModelDataMapper.toArticleDataList(query.getResultList());
+    List<ArticleData> articles = JpaReadModelDataMapper.toArticleDataList(query.getResultList());
+    cacheMissingReadingTimes(articles);
+    return articles;
+  }
+
+  private void cacheMissingReadingTimes(List<ArticleData> articles) {
+    for (ArticleData article : articles) {
+      if (article.getCachedReadingTime() != null) {
+        continue;
+      }
+      int readingTime = article.getReadingTime();
+      articleRepository.cacheReadingTimeIfAbsent(article.getId(), readingTime);
+      article.setCachedReadingTime(readingTime);
+    }
   }
 
   private QueryParts articleFilterWhere(String tag, String author, String favoritedBy) {

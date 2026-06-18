@@ -26,6 +26,7 @@ import io.spring.infrastructure.readservice.CommentReadService;
 import io.spring.infrastructure.readservice.TagReadService;
 import io.spring.infrastructure.readservice.UserReadService;
 import io.spring.infrastructure.readservice.UserRelationshipQueryService;
+import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -36,11 +37,19 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
+import org.springframework.test.context.jdbc.SqlConfig;
+import org.springframework.test.context.jdbc.SqlConfig.TransactionMode;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @ActiveProfiles("postgres")
 @Transactional
+@Sql(
+    scripts = "/sql/truncate-all.sql",
+    executionPhase = ExecutionPhase.BEFORE_TEST_METHOD,
+    config = @SqlConfig(transactionMode = TransactionMode.ISOLATED))
 @EnabledIfEnvironmentVariable(named = "REALWORLD_POSTGRES_URL", matches = "jdbc:postgresql:.*")
 public class JpaReadServicePostgresIntegrationTest {
   @Autowired private ArticleQueryService articleQueryService;
@@ -57,6 +66,7 @@ public class JpaReadServicePostgresIntegrationTest {
   @Autowired private UserReadService userReadService;
   @Autowired private TagReadService tagReadService;
   @Autowired private CommentReadService commentReadService;
+  @Autowired private EntityManager entityManager;
 
   @Test
   public void should_use_jpa_read_services_and_preserve_rest_read_model_equivalence() {
@@ -123,6 +133,8 @@ public class JpaReadServicePostgresIntegrationTest {
     Optional<ArticleData> bySlug = articleQueryService.findBySlug(newestArticle.getSlug(), reader);
     Assertions.assertTrue(bySlug.isPresent());
     assertArticleFlags(bySlug.get(), newestArticle, true, true, 1);
+    Assertions.assertEquals(1, bySlug.get().getReadingTime());
+    assertCachedReadingTime(newestArticle.getId(), 1);
     Assertions.assertTrue(bySlug.get().getTagList().contains("spring"));
     Assertions.assertTrue(bySlug.get().getTagList().contains("java"));
 
@@ -258,6 +270,16 @@ public class JpaReadServicePostgresIntegrationTest {
                 newestArticle.getId(),
                 new CursorPageParameter<>(Instant.parse("2026-06-16T13:00:00Z"), 1, Direction.NEXT))
             .size());
+  }
+
+  private void assertCachedReadingTime(String articleId, int expectedReadingTime) {
+    Object cachedReadingTime =
+        entityManager
+            .createNativeQuery("select reading_time from articles where id = :id")
+            .setParameter("id", articleId)
+            .getSingleResult();
+
+    Assertions.assertEquals(expectedReadingTime, ((Number) cachedReadingTime).intValue());
   }
 
   private void assertJpaReadServicesArePrimaryBeans() {

@@ -15,4 +15,11 @@ public interface SpringDataJpaArticleRepository extends JpaRepository<JpaArticle
   @Modifying
   @Query("update JpaArticle article set article.deleted = true where article.id = :id")
   void softDeleteById(@Param("id") String id);
+
+  @Modifying
+  @Query(
+      "update JpaArticle article "
+          + "set article.readingTime = :readingTime "
+          + "where article.id = :id and article.readingTime is null and article.deleted = false")
+  int cacheReadingTimeIfAbsent(@Param("id") String id, @Param("readingTime") int readingTime);
 }

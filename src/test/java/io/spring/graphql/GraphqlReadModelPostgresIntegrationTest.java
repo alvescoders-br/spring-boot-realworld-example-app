@@ -25,6 +25,7 @@ import io.spring.infrastructure.readservice.CommentReadService;
 import io.spring.infrastructure.readservice.TagReadService;
 import io.spring.infrastructure.readservice.UserReadService;
 import io.spring.infrastructure.readservice.UserRelationshipQueryService;
+import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -40,11 +41,19 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
+import org.springframework.test.context.jdbc.SqlConfig;
+import org.springframework.test.context.jdbc.SqlConfig.TransactionMode;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @ActiveProfiles("postgres")
 @Transactional
+@Sql(
+    scripts = "/sql/truncate-all.sql",
+    executionPhase = ExecutionPhase.BEFORE_TEST_METHOD,
+    config = @SqlConfig(transactionMode = TransactionMode.ISOLATED))
 @EnabledIfEnvironmentVariable(named = "REALWORLD_POSTGRES_URL", matches = "jdbc:postgresql:.*")
 class GraphqlReadModelPostgresIntegrationTest {
 
@@ -59,6 +68,7 @@ class GraphqlReadModelPostgresIntegrationTest {
   @Autowired private UserReadService userReadService;
   @Autowired private TagReadService tagReadService;
   @Autowired private CommentReadService commentReadService;
+  @Autowired private EntityManager entityManager;
 
   private User author;
   private User secondAuthor;
@@ -146,6 +156,7 @@ class GraphqlReadModelPostgresIntegrationTest {
     assertThat(firstArticleNode.get("favorited")).isEqualTo(true);
     assertThat(firstArticleNode.get("favoritesCount")).isEqualTo(1);
     assertThat(firstArticleNode.get("readingTime")).isEqualTo(2);
+    assertCachedReadingTime(newestArticle.getId(), 2);
     assertThat((List<String>) firstArticleNode.get("tagList")).containsExactlyInAnyOrder("spring", "java");
     assertThat(mapValue(firstArticleNode, "author")).containsEntry("username", author.getUsername());
     assertThat(mapValue(firstArticleNode, "author")).containsEntry("following", true);
@@ -347,6 +358,16 @@ class GraphqlReadModelPostgresIntegrationTest {
 
     assertThat(mapValue(previousCommentEdges.get(0), "node")).containsEntry("id", newestComment.getId());
     assertThat(mapValue(previousCommentEdges.get(0), "node")).containsEntry("body", "newest comment");
+  }
+
+  private void assertCachedReadingTime(String articleId, int expectedReadingTime) {
+    Object cachedReadingTime =
+        entityManager
+            .createNativeQuery("select reading_time from articles where id = :id")
+            .setParameter("id", articleId)
+            .getSingleResult();
+
+    assertThat(((Number) cachedReadingTime).intValue()).isEqualTo(expectedReadingTime);
   }
 
   private void assertJpaReadServicesArePrimaryBeans() {

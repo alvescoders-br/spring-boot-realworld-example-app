@@ -23,6 +23,14 @@ class ArticleDataTest {
     assertThat(articleWithBody(words(401)).getReadingTime()).isEqualTo(3);
   }
 
+  @Test
+  void shouldPreferCachedReadingTimeWhenPresent() {
+    ArticleData articleData = articleWithBody(words(401));
+    articleData.setCachedReadingTime(7);
+
+    assertThat(articleData.getReadingTime()).isEqualTo(7);
+  }
+
   private ArticleData articleWithBody(String body) {
     ArticleData articleData = new ArticleData();
     articleData.setBody(body);

@@ -33,6 +33,9 @@ public class JpaArticle {
   @Column(columnDefinition = "text")
   private String body;
 
+  @Column(name = "reading_time")
+  private Integer readingTime;
+
   @JdbcTypeCode(SqlTypes.TIMESTAMP_UTC)
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
@@ -82,6 +85,14 @@ public class JpaArticle {
 
   public String getId() {
     return id;
+  }
+
+  public Integer getReadingTime() {
+    return readingTime;
+  }
+
+  public void setReadingTime(Integer readingTime) {
+    this.readingTime = readingTime;
   }
 
   public boolean isDeleted() {

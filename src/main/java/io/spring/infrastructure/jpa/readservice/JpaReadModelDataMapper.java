@@ -20,7 +20,7 @@ final class JpaReadModelDataMapper {
     for (Object[] row : rows) {
       String articleId = stringValue(row[0]);
       ArticleData articleData = articlesById.computeIfAbsent(articleId, ignored -> toArticleData(row));
-      String tagName = stringValue(row[7]);
+      String tagName = stringValue(row[8]);
       if (tagName != null && !articleData.getTagList().contains(tagName)) {
         articleData.getTagList().add(tagName);
       }
@@ -29,19 +29,26 @@ final class JpaReadModelDataMapper {
   }
 
   static ArticleData toArticleData(Object[] row) {
-    return new ArticleData(
-        stringValue(row[0]),
-        stringValue(row[1]),
-        stringValue(row[2]),
-        stringValue(row[3]),
-        stringValue(row[4]),
-        false,
-        0,
-        instantValue(row[5]),
-        instantValue(row[6]),
-        new ArrayList<>(),
-        new ProfileData(
-            stringValue(row[8]), stringValue(row[9]), stringValue(row[10]), stringValue(row[11]), false));
+    ArticleData articleData =
+        new ArticleData(
+            stringValue(row[0]),
+            stringValue(row[1]),
+            stringValue(row[2]),
+            stringValue(row[3]),
+            stringValue(row[4]),
+            false,
+            0,
+            instantValue(row[5]),
+            instantValue(row[6]),
+            new ArrayList<>(),
+            new ProfileData(
+                stringValue(row[9]),
+                stringValue(row[10]),
+                stringValue(row[11]),
+                stringValue(row[12]),
+                false));
+    articleData.setCachedReadingTime(integerValue(row[7]));
+    return articleData;
   }
 
   static CommentData toCommentData(Object[] row) {
@@ -73,6 +80,16 @@ final class JpaReadModelDataMapper {
       return localDateTime.toInstant(ZoneOffset.UTC);
     }
     return Instant.parse(value.toString());
+  }
+
+  static Integer integerValue(Object value) {
+    if (value == null) {
+      return null;
+    }
+    if (value instanceof Number number) {
+      return number.intValue();
+    }
+    return Integer.valueOf(value.toString());
   }
 
   static String stringValue(Object value) {

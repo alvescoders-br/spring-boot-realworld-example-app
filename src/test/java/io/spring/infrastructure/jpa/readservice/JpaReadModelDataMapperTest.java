@@ -15,9 +15,9 @@ class JpaReadModelDataMapperTest {
   @Test
   void shouldAggregateArticleRowsAndDeduplicateTags() {
     Instant createdAt = Instant.parse("2026-06-17T12:00:00Z");
-    Object[] firstRow = articleRow("java", createdAt.toEpochMilli(), Timestamp.from(createdAt));
-    Object[] duplicateTagRow = articleRow("java", createdAt.toEpochMilli(), Timestamp.from(createdAt));
-    Object[] secondTagRow = articleRow("spring", createdAt.toEpochMilli(), Timestamp.from(createdAt));
+    Object[] firstRow = articleRow("java", 4, createdAt.toEpochMilli(), Timestamp.from(createdAt));
+    Object[] duplicateTagRow = articleRow("java", 4, createdAt.toEpochMilli(), Timestamp.from(createdAt));
+    Object[] secondTagRow = articleRow("spring", 4, createdAt.toEpochMilli(), Timestamp.from(createdAt));
 
     List<ArticleData> articles =
         JpaReadModelDataMapper.toArticleDataList(List.of(firstRow, duplicateTagRow, secondTagRow));
@@ -28,8 +28,21 @@ class JpaReadModelDataMapperTest {
     assertThat(article.getBody()).isEqualTo("article body");
     assertThat(article.getCreatedAt()).isEqualTo(createdAt);
     assertThat(article.getUpdatedAt()).isNotNull();
+    assertThat(article.getCachedReadingTime()).isEqualTo(4);
+    assertThat(article.getReadingTime()).isEqualTo(4);
     assertThat(article.getTagList()).containsExactly("java", "spring");
     assertThat(article.getProfileData().getUsername()).isEqualTo("author");
+  }
+
+  @Test
+  void shouldMapArticleWithoutCachedReadingTime() {
+    Instant createdAt = Instant.parse("2026-06-17T12:00:00Z");
+
+    ArticleData article =
+        JpaReadModelDataMapper.toArticleData(articleRow("java", null, createdAt, createdAt));
+
+    assertThat(article.getCachedReadingTime()).isNull();
+    assertThat(article.getReadingTime()).isEqualTo(1);
   }
 
   @Test
@@ -60,11 +73,13 @@ class JpaReadModelDataMapperTest {
   void shouldParseStringInstantsAndNullValues() {
     assertThat(JpaReadModelDataMapper.instantValue(null)).isNull();
     assertThat(JpaReadModelDataMapper.stringValue(null)).isNull();
+    assertThat(JpaReadModelDataMapper.integerValue(null)).isNull();
     assertThat(JpaReadModelDataMapper.instantValue("2026-06-17T12:00:00Z"))
         .isEqualTo(Instant.parse("2026-06-17T12:00:00Z"));
+    assertThat(JpaReadModelDataMapper.integerValue("5")).isEqualTo(5);
   }
 
-  private Object[] articleRow(String tagName, Object createdAt, Object updatedAt) {
+  private Object[] articleRow(String tagName, Object readingTime, Object createdAt, Object updatedAt) {
     return new Object[] {
       "article-id",
       "article-slug",
@@ -73,6 +88,7 @@ class JpaReadModelDataMapperTest {
       "article body",
       createdAt,
       updatedAt,
+      readingTime,
       tagName,
       "user-id",
       "author",
