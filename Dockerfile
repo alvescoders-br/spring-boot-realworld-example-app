@@ -12,7 +12,7 @@ RUN sed -i 's/\r$//' ./gradlew \
     && chmod +x ./gradlew \
     && ./gradlew --no-daemon bootJar -x test
 
-FROM eclipse-temurin:25-jdk
+FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 
 RUN useradd --system --create-home --home-dir /app realworld

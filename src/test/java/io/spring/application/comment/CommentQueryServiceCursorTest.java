@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.spring.application.CommentQueryService;
@@ -92,6 +93,84 @@ class CommentQueryServiceCursorTest {
     assertFalse(result.hasNext());
     assertTrue(result.hasPrevious());
     assertFalse(result.getData().get(0).getProfileData().isFollowing());
+  }
+
+  @Test
+  void should_mark_followed_authors_for_non_cursor_comments() {
+    CommentQueryService service =
+        new CommentQueryService(commentReadService, userRelationshipQueryService);
+    User currentUser = new User("reader@test.com", "reader", "password", "", "");
+    CommentData first = comment("comment-1", "author-1", Instant.parse("2026-06-16T10:00:00Z"));
+    CommentData second = comment("comment-2", "author-2", Instant.parse("2026-06-16T09:00:00Z"));
+    when(commentReadService.findByArticleId(eq("article-id"))).thenReturn(List.of(first, second));
+    when(userRelationshipQueryService.followingAuthors(
+            eq(currentUser.getId()), eq(List.of("author-1", "author-2"))))
+        .thenReturn(Set.of("author-2"));
+
+    List<CommentData> comments = service.findByArticleId("article-id", currentUser);
+
+    assertEquals(2, comments.size());
+    assertFalse(comments.get(0).getProfileData().isFollowing());
+    assertTrue(comments.get(1).getProfileData().isFollowing());
+  }
+
+  @Test
+  void should_not_mark_following_authors_when_non_cursor_user_is_absent() {
+    CommentQueryService service =
+        new CommentQueryService(commentReadService, userRelationshipQueryService);
+    CommentData first = comment("comment-1", "author-1", Instant.parse("2026-06-16T10:00:00Z"));
+    when(commentReadService.findByArticleId(eq("article-id"))).thenReturn(List.of(first));
+
+    List<CommentData> comments = service.findByArticleId("article-id", null);
+
+    assertEquals(1, comments.size());
+    assertFalse(comments.get(0).getProfileData().isFollowing());
+    verifyNoInteractions(userRelationshipQueryService);
+  }
+
+  @Test
+  void should_mark_following_author_when_finding_comment_by_id_for_current_user() {
+    CommentQueryService service =
+        new CommentQueryService(commentReadService, userRelationshipQueryService);
+    User currentUser = new User("reader@test.com", "reader", "password", "", "");
+    CommentData first = comment("comment-1", "author-1", Instant.parse("2026-06-16T10:00:00Z"));
+    when(commentReadService.findById(eq("comment-1"))).thenReturn(first);
+    when(userRelationshipQueryService.isUserFollowing(eq(currentUser.getId()), eq("author-1")))
+        .thenReturn(true);
+
+    CommentData comment = service.findById("comment-1", currentUser).orElseThrow();
+
+    assertTrue(comment.getProfileData().isFollowing());
+  }
+
+  @Test
+  void should_not_query_following_authors_when_non_cursor_comments_are_empty() {
+    CommentQueryService service =
+        new CommentQueryService(commentReadService, userRelationshipQueryService);
+    User currentUser = new User("reader@test.com", "reader", "password", "", "");
+    when(commentReadService.findByArticleId(eq("article-id"))).thenReturn(List.of());
+
+    List<CommentData> comments = service.findByArticleId("article-id", currentUser);
+
+    assertTrue(comments.isEmpty());
+    verifyNoInteractions(userRelationshipQueryService);
+  }
+
+  @Test
+  void should_not_mark_extra_page_when_cursor_comments_match_limit_exactly() {
+    CommentQueryService service =
+        new CommentQueryService(commentReadService, userRelationshipQueryService);
+    CursorPageParameter<Instant> page = new CursorPageParameter<>(null, 2, Direction.NEXT);
+    CommentData first = comment("comment-1", "author-1", Instant.parse("2026-06-16T10:00:00Z"));
+    CommentData second = comment("comment-2", "author-2", Instant.parse("2026-06-16T09:00:00Z"));
+    when(commentReadService.findByArticleIdWithCursor(eq("article-id"), eq(page)))
+        .thenReturn(new java.util.ArrayList<>(List.of(first, second)));
+
+    CursorPager<CommentData> result = service.findByArticleIdWithCursor("article-id", null, page);
+
+    assertEquals(2, result.getData().size());
+    assertFalse(result.hasNext());
+    assertFalse(result.hasPrevious());
   }
 
   private CommentData comment(String id, String authorId, Instant createdAt) {
