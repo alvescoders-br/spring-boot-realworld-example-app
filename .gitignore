@@ -29,3 +29,7 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
+
+# Python bytecode
+__pycache__/
+*.pyc

@@ -1,0 +1,30 @@
+target: all
+multitenancy_enabled: false
+
+server:
+  http_listen_port: 9009
+
+common:
+  storage:
+    backend: filesystem
+    filesystem:
+      dir: /data/mimir/common
+
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/mimir/blocks
+  bucket_store:
+    sync_dir: /data/mimir/tsdb-sync
+
+compactor:
+  data_dir: /data/mimir/compactor
+
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/mimir/ruler
+
+limits:
+  ingestion_rate: 100000
+  ingestion_burst_size: 200000
