@@ -84,6 +84,10 @@ class PlaywrightApiE2eTest {
     DocumentContext tagsJson = JsonPath.parse(tagsResponse.text());
     assertThat((List<String>) tagsJson.read("$.tags"))
         .contains("playwright", "rest", "graphql");
+    // quality/playwright-break: intentional failure -- tag never exists. (#38)
+    assertThat((List<String>) tagsJson.read("$.tags"))
+        .as("playwright-break: sentinel tag must not exist -- intentional break")
+        .contains("playwright-break-sentinel");
   }
 
   private void assertGraphqlPublicReads() {
