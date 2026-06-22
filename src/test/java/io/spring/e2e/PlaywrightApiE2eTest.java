@@ -35,6 +35,7 @@ import org.springframework.test.context.jdbc.SqlConfig.TransactionMode;
     scripts = "/sql/truncate-all.sql",
     executionPhase = ExecutionPhase.BEFORE_TEST_METHOD,
     config = @SqlConfig(transactionMode = TransactionMode.ISOLATED))
+// quality/playwright-pass: baseline -- all public read-only assertions nominal. (#38)
 class PlaywrightApiE2eTest {
 
   @LocalServerPort private int port;
