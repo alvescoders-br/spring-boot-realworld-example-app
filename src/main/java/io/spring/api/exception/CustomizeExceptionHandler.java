@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,16 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
+
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException e) {
+    return realWorldError(HttpStatus.NOT_FOUND, "not found");
+  }
+
+  @ExceptionHandler(NoAuthorizationException.class)
+  public ResponseEntity<Object> handleNoAuthorization(NoAuthorizationException e) {
+    return realWorldError(HttpStatus.FORBIDDEN, "forbidden");
+  }
 
   @ExceptionHandler({InvalidRequestException.class})
   public ResponseEntity<Object> handleInvalidRequest(RuntimeException e, WebRequest request) {
@@ -105,5 +116,13 @@ public class CustomizeExceptionHandler extends ResponseEntityExceptionHandler {
     } else {
       return String.join(".", Arrays.copyOfRange(splits, 2, splits.length));
     }
+  }
+
+  private ResponseEntity<Object> realWorldError(HttpStatus status, String message) {
+    List<FieldErrorResource> errors =
+        List.of(new FieldErrorResource("global", "body", status.name(), message));
+    return ResponseEntity.status(status)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(new ErrorResource(errors));
   }
 }
