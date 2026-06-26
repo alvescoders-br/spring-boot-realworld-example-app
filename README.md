@@ -86,8 +86,9 @@ The app exposes `GET /actuator/health`, `GET /actuator/info` and
 the Prometheus endpoint and remote-writes metrics to Mimir; traces are exported
 to Tempo through OTLP.
 
-The operations validation script starts Compose, waits for readiness, checks the
-endpoint counter, validates startup and shutdown log markers, and tears the
+The operations validation script starts Compose, waits for readiness, validates
+endpoint counters both at the app Prometheus endpoint and in Mimir, validates
+Tempo span ingestion, checks startup and shutdown log markers, and tears the
 stack down:
 
 ```bash
