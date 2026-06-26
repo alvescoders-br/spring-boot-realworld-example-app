@@ -1,81 +1,129 @@
-# ![RealWorld Example App using Kotlin and Spring](example-logo.png)
+# RealWorld Spring Boot Example App
 
-[![Actions](https://github.com/gothinkster/spring-boot-realworld-example-app/workflows/Java%20CI/badge.svg)](https://github.com/gothinkster/spring-boot-realworld-example-app/actions)
+[![Actions](https://github.com/alvescoders-br/spring-boot-realworld-example-app/actions/workflows/gradle.yml/badge.svg)](https://github.com/alvescoders-br/spring-boot-realworld-example-app/actions/workflows/gradle.yml)
 
-> ### Spring boot + MyBatis codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) spec and API.
+Backend RealWorld/Conduit implemented with Java, Spring Boot, REST, GraphQL,
+Spring Security, Spring Data JPA/Hibernate, Flyway and PostgreSQL.
 
-This codebase was created to demonstrate a fully fledged full-stack application built with Spring boot + Mybatis including CRUD operations, authentication, routing, pagination, and more.
+This README was refreshed as part of issue #42 after the refactoring audit, so
+it reflects the current Java/JPA/PostgreSQL architecture instead of the legacy
+MyBatis/SQLite baseline.
 
-For more information on how to this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
+## Runtime
 
-# *NEW* GraphQL Support  
+- Java 25
+- Spring Boot 4.0.3
+- Gradle 9.3.1 wrapper
+- PostgreSQL 18 via Docker Compose
+- Flyway database migrations
+- REST + GraphQL DGS
+- OpenAPI/Swagger UI via springdoc
+- Micrometer/Prometheus metrics and OpenTelemetry traces for the local LGTM stack
 
-Following some DDD principles. REST or GraphQL is just a kind of adapter. And the domain layer will be consistent all the time. So this repository implement GraphQL and REST at the same time.
+## Architecture
 
-The GraphQL schema is https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/src/main/resources/schema/schema.graphqls and the visualization looks like below.
+- `api`: REST controllers, exception handling and security configuration.
+- `graphql`: GraphQL queries, mutations and HTTP transport configuration.
+- `core`: domain entities, repositories and domain services.
+- `application`: query services, DTOs and pagination helpers.
+- `infrastructure`: Spring Data JPA adapters and read services.
 
-![](graphql-schema.png)
+Persistence is implemented with Spring Data JPA/Hibernate over PostgreSQL.
+Schema changes are versioned in `src/main/resources/db/migration`.
 
-And this implementation is using [dgs-framework](https://github.com/Netflix/dgs-framework) which is a quite new java graphql server framework.
-# How it works
+## Local Run
 
-The application uses Spring Boot (Web, Mybatis).
+Start PostgreSQL:
 
-* Use the idea of Domain Driven Design to separate the business term and infrastructure term.
-* Use MyBatis to implement the [Data Mapper](https://martinfowler.com/eaaCatalog/dataMapper.html) pattern for persistence.
-* Use [CQRS](https://martinfowler.com/bliki/CQRS.html) pattern to separate the read model and write model.
+```bash
+docker compose up -d postgres
+```
 
-And the code is organized as this:
+Run the application:
 
-1. `api` is the web layer implemented by Spring MVC
-2. `core` is the business model including entities and services
-3. `application` is the high-level services for querying the data transfer objects
-4. `infrastructure`  contains all the implementation classes as the technique details
+```bash
+set SPRING_PROFILES_ACTIVE=postgres
+set REALWORLD_POSTGRES_URL=jdbc:postgresql://localhost:55432/realworld
+set REALWORLD_POSTGRES_USERNAME=realworld
+set REALWORLD_POSTGRES_PASSWORD=realworld-local-password
+gradlew.bat bootRun
+```
 
-# Security
+Smoke check:
 
-Integration with Spring Security and add other filter for jwt token process.
+```bash
+curl http://localhost:8080/tags
+```
 
-The secret key is stored in `application.properties`.
+The API base URL is `http://localhost:8080`; there is no `/api` prefix.
 
-# Database
+## API Documentation
 
-It uses a ~~H2 in-memory database~~ sqlite database (for easy local test without losing test data after every restart), can be changed easily in the `application.properties` for any other database.
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- GraphQL endpoint: `http://localhost:8080/graphql`
+- GraphQL schema: `src/main/resources/schema/schema.graphqls`
 
-# Getting started
+## Docker And Observability
 
-You'll need Java 11 installed.
+The full local stack starts the app, PostgreSQL and LGTM components:
 
-    ./gradlew bootRun
+```bash
+docker compose up -d
+```
 
-To test that it works, open a browser tab at http://localhost:8080/tags .  
-Alternatively, you can run
+Services:
 
-    curl http://localhost:8080/tags
+- App: `http://localhost:8080`
+- Grafana: `http://localhost:3000`
+- Loki: `http://localhost:3100`
+- Tempo: `http://localhost:33200`
+- Mimir: `http://localhost:9909`
+- Alloy: `http://localhost:12345`
 
-# Try it out with [Docker](https://www.docker.com/)
+The app exposes `GET /actuator/health`, `GET /actuator/info` and
+`GET /actuator/prometheus` for local operational checks. Grafana Alloy scrapes
+the Prometheus endpoint and remote-writes metrics to Mimir; traces are exported
+to Tempo through OTLP.
 
-You'll need Docker installed.
-	
-    ./gradlew bootBuildImage --imageName spring-boot-realworld-example-app
-    docker run -p 8081:8080 spring-boot-realworld-example-app
+The operations validation script starts Compose, waits for readiness, checks the
+endpoint counter, validates startup and shutdown log markers, and tears the
+stack down:
 
-# Try it out with a RealWorld frontend
+```bash
+py scripts/validate-operations.py
+```
 
-The entry point address of the backend API is at http://localhost:8080, **not** http://localhost:8080/api as some of the frontend documentation suggests.
+## Tests
 
-# Run test
+Run the main suite:
 
-The repository contains a lot of test cases to cover both api test and repository test.
+```bash
+gradlew.bat test
+```
 
-    ./gradlew test
+The suite expects PostgreSQL to be reachable when tests use the `postgres`
+profile. For local execution, start the Compose database first:
 
-# Code format
+```bash
+docker compose up -d postgres
+gradlew.bat test
+```
 
-Use spotless for code format.
+Run Playwright API E2E smoke tests:
 
-    ./gradlew spotlessJavaApply
+```bash
+gradlew.bat playwrightE2e
+```
 
-# Help
+Run mutation testing:
 
-Please fork and PR to improve the project.
+```bash
+gradlew.bat pitest
+```
+
+## Formatting
+
+```bash
+gradlew.bat spotlessApply
+```

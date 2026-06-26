@@ -1,0 +1,16 @@
+prometheus.scrape "realworld_app" {
+  targets = [{
+    __address__ = "app:8080",
+    __metrics_path__ = "/actuator/prometheus",
+    job = "realworld-app",
+  }]
+
+  scrape_interval = "10s"
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://mimir:9009/api/v1/push"
+  }
+}

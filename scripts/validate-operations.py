@@ -20,7 +20,10 @@ from pathlib import Path
 
 
 DEFAULT_READY_URL = "http://localhost:8080/tags"
-STARTUP_LOG_MARKER = "Started RealWorldApplication"
+DEFAULT_METRICS_URL = "http://localhost:8080/actuator/prometheus"
+DEFAULT_METRICS_URI = "/tags"
+STARTUP_LOG_MARKER = "RealWorldApplication startup complete"
+SHUTDOWN_LOG_MARKER = "RealWorldApplication shutdown complete"
 
 
 def run_command(command: list[str], *, cwd: Path, timeout_seconds: int) -> subprocess.CompletedProcess[str]:
@@ -81,6 +84,21 @@ def validate_startup_log(logs: str) -> None:
     print(f"startup log OK: found {STARTUP_LOG_MARKER!r}")
 
 
+def validate_shutdown_log(logs: str) -> None:
+    if SHUTDOWN_LOG_MARKER not in logs:
+        raise RuntimeError(f"Shutdown log marker not found: {SHUTDOWN_LOG_MARKER!r}")
+    print(f"shutdown log OK: found {SHUTDOWN_LOG_MARKER!r}")
+
+
+def stop_app(command_prefix: list[str], cwd: Path, timeout_seconds: int) -> None:
+    result = run_command(
+        [*command_prefix, "stop", "app"],
+        cwd=cwd,
+        timeout_seconds=timeout_seconds,
+    )
+    require_success(result, "Stop app service")
+
+
 def validate_shutdown(command_prefix: list[str], cwd: Path, timeout_seconds: int) -> None:
     result = run_command(
         [*command_prefix, "ps", "-q"],
@@ -97,6 +115,38 @@ def validate_shutdown(command_prefix: list[str], cwd: Path, timeout_seconds: int
     print("shutdown OK: no Compose containers left running")
 
 
+def read_url(url: str, timeout_seconds: int = 10) -> str:
+    with urllib.request.urlopen(url, timeout=timeout_seconds) as response:
+        return response.read().decode("utf-8", errors="replace")
+
+
+def endpoint_counter(metrics_text: str, endpoint_uri: str) -> float:
+    total = 0.0
+    for line in metrics_text.splitlines():
+        if line.startswith("#") or "http_server_requests_seconds_count" not in line:
+            continue
+        if f'uri="{endpoint_uri}"' not in line:
+            continue
+        try:
+            total += float(line.rsplit(" ", 1)[1])
+        except (IndexError, ValueError):
+            continue
+    return total
+
+
+def validate_endpoint_counter(metrics_url: str, ready_url: str, endpoint_uri: str) -> None:
+    before = endpoint_counter(read_url(metrics_url), endpoint_uri)
+    read_url(ready_url)
+    deadline = time.monotonic() + 20
+    while time.monotonic() < deadline:
+        after = endpoint_counter(read_url(metrics_url), endpoint_uri)
+        if after > before:
+            print(f"endpoint counter OK: {endpoint_uri} incremented from {before:g} to {after:g}")
+            return
+        time.sleep(2)
+    raise RuntimeError(f"Endpoint counter did not increment for {endpoint_uri!r}")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -108,6 +158,16 @@ def parse_args() -> argparse.Namespace:
         "--ready-url",
         default=DEFAULT_READY_URL,
         help="Public URL used for application readiness validation.",
+    )
+    parser.add_argument(
+        "--metrics-url",
+        default=DEFAULT_METRICS_URL,
+        help="Prometheus metrics URL used to validate endpoint counters.",
+    )
+    parser.add_argument(
+        "--metrics-uri",
+        default=DEFAULT_METRICS_URI,
+        help="Endpoint uri label expected in http_server_requests_seconds_count.",
     )
     parser.add_argument(
         "--startup-timeout-seconds",
@@ -153,6 +213,10 @@ def main() -> int:
         wait_for_http(args.ready_url, args.startup_timeout_seconds)
         logs = collect_logs(command_prefix, repo_root, args.command_timeout_seconds)
         validate_startup_log(logs)
+        validate_endpoint_counter(args.metrics_url, args.ready_url, args.metrics_uri)
+        stop_app(command_prefix, repo_root, args.command_timeout_seconds)
+        logs = collect_logs(command_prefix, repo_root, args.command_timeout_seconds)
+        validate_shutdown_log(logs)
     except Exception as exc:
         print(f"validation failed: {exc}", file=sys.stderr)
         return 1

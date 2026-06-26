@@ -46,6 +46,22 @@ services:
       - loki
       - tempo
       - mimir
+      - alloy
+
+  alloy:
+    image: grafana/alloy:v1.5.1
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.alloy
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+    depends_on:
+      - app
+      - mimir
 
   loki:
     image: grafana/loki:3.3.2
@@ -57,9 +73,9 @@ services:
     image: grafana/tempo:2.6.1
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     ports:
-      - "3200:3200"
-      - "4317:4317"
-      - "4318:4318"
+      - "33200:3200"
+      - "34317:4317"
+      - "34318:4318"
     volumes:
       - ./docker/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - tempo-data:/tmp/tempo
@@ -68,7 +84,7 @@ services:
     image: grafana/mimir:2.14.3
     command: ["-config.file=/etc/mimir/mimir.yaml"]
     ports:
-      - "9009:9009"
+      - "9909:9009"
     volumes:
       - ./docker/mimir/mimir.yaml:/etc/mimir/mimir.yaml:ro
       - mimir-data:/data/mimir
@@ -76,5 +92,6 @@ services:
 volumes:
   realworld-postgres-data:
   grafana-data:
+  alloy-data:
   tempo-data:
   mimir-data:
