@@ -17,6 +17,10 @@ blocks_storage:
   bucket_store:
     sync_dir: /data/mimir/tsdb-sync
 
+ingester:
+  ring:
+    replication_factor: 1
+
 compactor:
   data_dir: /data/mimir/compactor
 
