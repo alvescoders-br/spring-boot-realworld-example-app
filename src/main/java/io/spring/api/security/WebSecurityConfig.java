@@ -64,6 +64,12 @@ public class WebSecurityConfig {
                 authorize
                     .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/actuator/health",
+                        "/actuator/info",
+                        "/actuator/prometheus")
+                    .permitAll()
                     .requestMatchers("/graphiql", "/graphql")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/articles/feed")

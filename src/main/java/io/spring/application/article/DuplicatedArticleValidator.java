@@ -13,6 +13,9 @@ class DuplicatedArticleValidator
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
+    if (value == null) {
+      return true;
+    }
     return !articleQueryService.findBySlug(Article.toSlug(value), null).isPresent();
   }
 }
